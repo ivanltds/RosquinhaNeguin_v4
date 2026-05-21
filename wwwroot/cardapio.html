@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardápio | Rosquinha do Neguin</title>
+<link rel="icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/shared.css">
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">
+    <img src="/img/logo-200.png" class="nav-logo">
+    <span>Rosquinha do Neguin</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Início</a></li>
+    <li><a href="/cardapio.html" class="active">Cardápio</a></li>
+    <li><a href="/pedido.html">Meu Pedido</a></li>
+  </ul>
+  <a href="/pedido.html" class="cart-btn">
+    🛒 <span id="cartCount" class="cart-count">0</span>
+  </a>
+</nav>
+
+<div class="page-hero">
+  <h1>Nosso Cardápio</h1>
+  <p>Feito com carinho para você</p>
+</div>
+
+<!-- Container do Cardápio -->
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    
+    <!-- Filtros (Abas) -->
+    <div class="cardapio-nav">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="filtrar('churros', this)">🍩 Churros</button>
+            <button class="tab-btn" onclick="filtrar('rosquinhas', this)">🥯 Rosquinhas</button>
+            <button class="tab-btn" onclick="filtrar('salgados', this)">🍗 Salgados</button>
+            <button class="tab-btn" onclick="filtrar('bebidas', this)">☕ Bebidas</button>
+            <button class="tab-btn" onclick="filtrar('combos', this)">🎁 Combos</button>
+        </div>
+    </div>
+
+    <!-- Status de Carregamento -->
+    <div id="statusMsg" style="text-align: center; margin-bottom: 30px; font-weight: 500; color: var(--color-chocolate); letter-spacing: 0.5px;"></div>
+
+    <!-- Grid de Produtos -->
+    <div id="mainGrid" class="product-grid">
+        <!-- Itens serão injetados aqui -->
+    </div>
+
+</div>
+
+<footer>
+  <p>© 2026 Rosquinha do Neguin</p>
+</footer>
+
+<script src="/js/config.js"></script>
+<script src="/js/shared.js"></script>
+
+<script>
+// Cache de produtos para evitar requisições repetidas
+const cache = {};
+
+function renderCard(p) {
+    return `
+    <div class="product-card">
+      <div class="product-emoji" style="font-size: 3rem; margin-bottom: 10px;">${p.emoji}</div>
+      <div class="product-info">
+        <div class="product-name" style="font-weight: 700; font-size: 1.2rem; color: var(--color-chocolate);">${p.nome}</div>
+        <div class="product-desc" style="font-size: 0.9rem; color: var(--color-text-sub); margin: 10px 0;">${p.descricao || ''}</div>
+      </div>
+      <div class="product-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+        <div class="product-price" style="font-weight: 800; color: var(--color-chocolate);">${formatBRL(p.preco)}</div>
+        <button class="btn btn-gold btn-sm" onclick="addItem(${p.id}, '${p.nome}', ${p.preco}, '${p.emoji}')" style="padding: 5px 15px;">
+          +
+        </button>
+      </div>
+    </div>`;
+}
+
+async function filtrar(cat, btn) {
+    // 1. Estética dos botões
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const grid = document.getElementById('mainGrid');
+    const status = document.getElementById('statusMsg');
+
+    // 2. Verifica Cache ou Busca API
+    if (cache[cat]) {
+        grid.innerHTML = cache[cat].map(renderCard).join('');
+        status.textContent = `Exibindo ${cache[cat].length} itens em ${cat}.`;
+        return;
+    }
+
+    grid.innerHTML = '';
+    status.textContent = `Carregando ${cat}...`;
+
+    try {
+        const data = await apiFetch('/api/produtos?categoria=' + cat);
+        console.log('Dados recebidos:', data);
+        
+        if (data && data.length > 0) {
+            cache[cat] = data;
+            grid.innerHTML = data.map(renderCard).join('');
+            status.textContent = `Encontrados ${data.length} itens em ${cat}.`;
+        } else {
+            grid.innerHTML = '';
+            status.textContent = `Nenhum produto encontrado na categoria "${cat}".`;
+        }
+    } catch (err) {
+        console.error(err);
+        status.textContent = `Erro ao carregar: ${err.message}`;
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:red;">Não foi possível carregar os produtos. Verifique se o servidor está rodando.</p>';
+    }
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', () => {
+    updateCartBadge();
+    // Inicia com churros
+    const defaultBtn = document.querySelector('.tabs button');
+    if (defaultBtn) filtrar('churros', defaultBtn);
+});
+</script>
+
+</body>
+</html>

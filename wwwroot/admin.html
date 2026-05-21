@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<!-- Define codificação de caracteres -->
+<meta charset="UTF-8">
+
+<!-- Responsividade (mobile) -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Título da aba -->
+<title>Admin | Rosquinha do Neguin</title>
+
+<!-- Ícone do site -->
+<link rel="icon" href="/favicon.ico">
+
+<!-- Importação de fontes -->
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display&family=Nunito&display=swap" rel="stylesheet">
+
+<!-- CSS compartilhado -->
+<link rel="stylesheet" href="/css/shared.css">
+
+</head>
+
+<body>
+
+<!-- NAVBAR (topo do site) -->
+<nav>
+  <!-- Logo + nome -->
+  <a class="nav-brand" href="/">
+    <img src="/img/logo-200.png" alt="Logo" class="nav-logo">
+    <span class="nav-wordmark">Rosquinha do Neguin</span>
+  </a>
+
+  <!-- Links principais -->
+  <ul class="nav-links">
+    <li><a href="/">Site</a></li>
+    <li><a href="/cardapio.html">Cardápio</a></li>
+    <li><a href="/admin.html" class="active">⚙️ Admin</a></li>
+  </ul>
+
+  <!-- Carrinho -->
+  <a href="/pedido.html" class="cart-btn">
+    🛒 <span class="cart-count" id="cartCount"></span>
+  </a>
+</nav>
+
+<div class="admin-container">
+
+<!-- SIDEBAR (menu lateral) -->
+<div class="sidebar">
+
+  <!-- Seção painel -->
+  <div class="sidebar-section">
+    <div class="sidebar-label">Painel</div>
+
+    <!-- Botão Dashboard -->
+    <button class="sidebar-link active" onclick="showSection('dashboard',this)">
+      <span>📊</span> Dashboard
+    </button>
+  </div>
+
+  <!-- Seção gestão -->
+  <div class="sidebar-section">
+    <div class="sidebar-label">Gestão</div>
+
+    <!-- Pedidos -->
+    <button class="sidebar-link" onclick="showSection('pedidos',this)">
+      <span>📋</span> Pedidos
+    </button>
+
+    <!-- Produtos -->
+    <button class="sidebar-link" onclick="showSection('produtos',this)">
+      <span>🍩</span> Produtos
+    </button>
+  </div>
+
+</div>
+
+<!-- CONTEÚDO PRINCIPAL -->
+<div class="admin-main">
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard" class="admin-section active">
+
+    <!-- Título -->
+    <h2>Bom dia, Pedro 👋</h2>
+
+    <!-- Cards de estatísticas -->
+    <div id="statsRow">
+      <!-- Preenchido via JS -->
+    </div>
+
+    <!-- Últimos pedidos -->
+    <div id="recentPedidos">
+      <!-- Preenchido via JS -->
+    </div>
+
+  </div>
+
+  <!-- PEDIDOS -->
+  <div id="section-pedidos" class="admin-section">
+
+    <!-- Filtros -->
+    <input type="text" id="searchPedido" placeholder="Buscar cliente">
+
+    <!-- Tabela -->
+    <div id="pedidosTableWrap">
+      <!-- Preenchido via JS -->
+    </div>
+
+  </div>
+
+  <!-- PRODUTOS -->
+  <div id="section-produtos" class="admin-section">
+
+    <!-- Busca -->
+    <input type="text" id="searchProduto">
+
+    <!-- Tabela -->
+    <div id="produtosTableWrap">
+      <!-- Preenchido via JS -->
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<!-- MODAL (popup para criar/editar produto) -->
+<div class="modal-bg" id="modalBg">
+
+  <div class="modal">
+
+    <!-- Título -->
+    <h3 style="margin-bottom: 20px; color: var(--color-chocolate);">Novo Produto</h3>
+
+    <!-- ID oculto -->
+    <input type="hidden" id="produtoId">
+
+    <!-- Nome -->
+    <div class="form-group">
+      <label>Nome do Produto</label>
+      <input type="text" id="pNome" class="form-control" placeholder="Ex: Churros Especial">
+    </div>
+
+    <!-- Descrição -->
+    <div class="form-group">
+      <label>Descrição</label>
+      <input type="text" id="pDescricao" class="form-control" placeholder="Frito na hora...">
+    </div>
+
+    <!-- Emoji e Preço -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+      <div class="form-group">
+        <label>Emoji</label>
+        <input type="text" id="pEmoji" class="form-control" placeholder="🍩">
+      </div>
+      <div class="form-group">
+        <label>Preço</label>
+        <input type="number" id="pPreco" class="form-control" placeholder="0.00">
+      </div>
+    </div>
+
+    <!-- Categoria -->
+    <div class="form-group">
+      <label>Categoria</label>
+      <select id="pCategoria" class="form-control">
+        <option value="churros">Churros</option>
+        <option value="rosquinhas">Rosquinhas</option>
+        <option value="salgados">Salgados</option>
+        <option value="bebidas">Bebidas</option>
+        <option value="combos">Combos</option>
+      </select>
+    </div>
+
+    <!-- Botões -->
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button onclick="salvarProduto()" class="btn btn-gold" style="flex: 1;">Salvar</button>
+      <button onclick="document.getElementById('modalBg').style.visibility='hidden'; document.getElementById('modalBg').style.opacity='0';" class="btn btn-outline" style="flex: 1;">Cancelar</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- JS CONFIG (URL da API) -->
+<script src="/js/config.js"></script>
+
+<!-- JS GLOBAL -->
+<script src="/js/shared.js"></script>
+
+<script>
+
+// ────────────────
+// VARIÁVEIS GLOBAIS
+// ────────────────
+let allPedidos  = [];   // lista de pedidos
+let allProdutos = [];   // lista de produtos
+
+
+// ────────────────
+// TROCAR SEÇÃO
+// ────────────────
+function showSection(id, btn) {
+
+  // Esconde todas as seções
+  document.querySelectorAll('.admin-section')
+    .forEach(s => s.classList.remove('active'));
+
+  // Mostra a selecionada
+  document.getElementById('section-' + id)
+    .classList.add('active');
+
+  // Carrega dados dependendo da tela
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'pedidos')   loadPedidos();
+  if (id === 'produtos')  loadProdutos();
+}
+
+
+// ────────────────
+// DASHBOARD
+// ────────────────
+async function loadDashboard() {
+
+  // Busca dados da API
+  const stats = await apiFetch('/api/pedidos/stats');
+
+  // Atualiza HTML
+  document.getElementById('statsRow').innerHTML =
+    `<div>Total: ${stats.total}</div>`;
+}
+
+
+// ────────────────
+// PEDIDOS
+// ────────────────
+async function loadPedidos() {
+
+  // Busca pedidos
+  allPedidos = await apiFetch('/api/pedidos');
+
+  // Renderiza tabela
+  renderPedidosTable(allPedidos);
+}
+
+
+// Atualiza status
+async function updateStatus(id, select) {
+
+  const novoStatus = select.value;
+
+  await apiFetch(`/api/pedidos/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: novoStatus })
+  });
+}
+
+
+// Deleta pedido
+async function deletePedido(id) {
+
+  await apiFetch(`/api/pedidos/${id}`, {
+    method: 'DELETE'
+  });
+}
+
+
+// ────────────────
+// PRODUTOS
+// ────────────────
+async function loadProdutos() {
+
+  // Busca produtos
+  allProdutos = await apiFetch('/api/produtos');
+
+  renderProdutosTable(allProdutos);
+}
+
+
+// Salvar produto (POST ou PUT)
+async function salvarProduto() {
+
+  const id = document.getElementById('produtoId').value;
+
+  const body = {
+    nome: document.getElementById('pNome').value,
+    preco: parseFloat(document.getElementById('pPreco').value)
+  };
+
+  if (id) {
+    // Atualizar
+    await apiFetch(`/api/produtos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body)
+    });
+  } else {
+    // Criar
+    await apiFetch('/api/produtos', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+  }
+}
+
+
+// ────────────────
+// INICIALIZAÇÃO
+// ────────────────
+
+// Carrega dashboard ao abrir
+loadDashboard();
+
+</script>
+
+</body>
+</html>

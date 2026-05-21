@@ -1,0 +1,26 @@
+# Maestro-AI
+maestro-ai/
+
+# .NET Build artifacts
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.staticwebassets.runtime.json
+*.staticwebassets.endpoints.json
+
+# Database
+rosquinha.db
+rosquinha.db-shm
+rosquinha.db-wal
+
+# IDE / OS
+.vscode/
+.vs/
+.idea/
+*.user
+*.suo
+*.lscache
+.DS_Store
+Thumbs.db

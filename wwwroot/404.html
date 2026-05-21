@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Página não encontrada | Rosquinha do Neguin</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/shared.css">
+<style>
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;background:var(--choc);padding-top:0}
+.not-found{display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px 24px}
+.nf-emoji{font-size:80px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.nf-code{font-family:'Playfair Display',serif;font-size:clamp(80px,20vw,160px);font-weight:900;color:rgba(212,160,23,0.15);line-height:1;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0;user-select:none}
+.nf-content{position:relative;z-index:1}
+.nf-title{font-family:'Great Vibes',cursive;font-size:clamp(40px,10vw,72px);color:var(--gold);line-height:1}
+.nf-msg{color:rgba(253,248,240,0.5);font-size:16px;max-width:400px;line-height:1.7;margin:8px 0 28px}
+.nf-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+</style>
+</head>
+<body>
+<div style="position:relative">
+  <div class="nf-code">404</div>
+  <div class="not-found nf-content">
+    <div class="nf-emoji">🍩</div>
+    <div class="nf-title">Ops, sumiu!</div>
+    <p class="nf-msg">Parece que esse churros foi embora... A página que você está procurando não existe ou foi movida.</p>
+    <div class="nf-btns">
+      <a href="/" class="btn btn-gold">🏠 Voltar para o início</a>
+      <a href="/cardapio.html" class="btn btn-outline">🍩 Ver Cardápio</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
