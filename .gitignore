@@ -1,0 +1,23 @@
+## [Visual Studio / .NET]
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+*.lscache
+
+## [Databases]
+*.db
+*.db-shm
+*.db-wal
+
+## [Environment / Secrets]
+.env
+appsettings.Development.json
+
+## [OS Specific]
+.DS_Store
+Thumbs.db
+
+## [Docker]
+.docker/
