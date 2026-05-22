@@ -1,0 +1,81 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\404.html",
+      "PackagePath": "staticwebassets\\404.html"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\admin.html",
+      "PackagePath": "staticwebassets\\admin.html"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\cardapio.html",
+      "PackagePath": "staticwebassets\\cardapio.html"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\css\\shared.css",
+      "PackagePath": "staticwebassets\\css\\shared.css"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\favicon.ico",
+      "PackagePath": "staticwebassets\\favicon.ico"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\img\\bg-pattern.jpg",
+      "PackagePath": "staticwebassets\\img\\bg-pattern.jpg"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\img\\bg-pattern.png",
+      "PackagePath": "staticwebassets\\img\\bg-pattern.png"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\img\\favicon.png",
+      "PackagePath": "staticwebassets\\img\\favicon.png"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\img\\logo-200.png",
+      "PackagePath": "staticwebassets\\img\\logo-200.png"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\img\\logo-circle.png",
+      "PackagePath": "staticwebassets\\img\\logo-circle.png"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\img\\logo.png",
+      "PackagePath": "staticwebassets\\img\\logo.png"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\js\\config.js",
+      "PackagePath": "staticwebassets\\js\\config.js"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\js\\shared.js",
+      "PackagePath": "staticwebassets\\js\\shared.js"
+    },
+    {
+      "Id": "C:\\Users\\ivanl\\Downloads\\RosquinhaNeguin_v4 (2)\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\RosquinhaNeguin_v4\\wwwroot\\pedido.html",
+      "PackagePath": "staticwebassets\\pedido.html"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.RosquinhaNeguin.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.RosquinhaNeguin.props",
+      "PackagePath": "build\\RosquinhaNeguin.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.RosquinhaNeguin.props",
+      "PackagePath": "buildMultiTargeting\\RosquinhaNeguin.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.RosquinhaNeguin.props",
+      "PackagePath": "buildTransitive\\RosquinhaNeguin.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
