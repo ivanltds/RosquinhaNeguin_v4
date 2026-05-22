@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Rosquinha do Neguin</title>
+    <link rel="icon" href="/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+        }
+        .auth-toggle {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .auth-toggle button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--color-text-sub);
+        }
+        .auth-toggle button.active {
+            color: var(--color-chocolate);
+            border-bottom: 2px solid var(--color-chocolate);
+            margin-bottom: -2px;
+        }
+        .auth-form {
+            display: none;
+        }
+        .auth-form.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<!-- VLibras -->
+<div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
+</div>
+
+<nav role="navigation">
+  <div class="nav-container">
+      <a class="nav-brand" href="/">
+        <img src="/img/logo-200.png" alt="Logo">
+        <span>Rosquinha do Neguin</span>
+      </a>
+      
+      <div class="mobile-toggle" onclick="toggleMenu()">☰</div>
+      
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Início</a></li>
+        <li><a href="/cardapio.html">Cardápio</a></li>
+        <li class="user-only" style="display: none;"><a href="/meus-pedidos.html">Meus Pedidos</a></li>
+        <li><a href="/pedido.html">Carrinho <span class="cart-count">0</span></a></li>
+        <li id="navAuth">
+            <a href="/login.html" class="btn btn-outline">Entrar</a>
+        </li>
+      </ul>
+  </div>
+</nav>
+
+<div class="auth-container">
+    <div class="form-card">
+        <div class="auth-toggle">
+            <button id="btnTabLogin" class="active" onclick="toggleAuth('login')">Entrar</button>
+            <button id="btnTabRegister" onclick="toggleAuth('register')">Cadastrar</button>
+        </div>
+
+        <!-- FORM LOGIN -->
+        <form id="formLogin" class="auth-form active" onsubmit="handleLogin(event)">
+            <h2 style="margin-bottom: 20px; text-align: center;">Bem-vindo de volta</h2>
+            <div class="form-group">
+                <label for="loginEmail">E-mail</label>
+                <input type="email" id="loginEmail" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="loginSenha">Senha</label>
+                <input type="password" id="loginSenha" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-gold" style="width: 100%;">Entrar</button>
+        </form>
+
+        <!-- FORM CADASTRO -->
+        <form id="formRegister" class="auth-form" onsubmit="handleRegister(event)">
+            <h2 style="margin-bottom: 20px; text-align: center;">Criar sua conta</h2>
+            <div class="form-group">
+                <label for="regNome">Nome Completo</label>
+                <input type="text" id="regNome" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="regEmail">E-mail</label>
+                <input type="email" id="regEmail" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="regSenha">Senha</label>
+                <input type="password" id="regSenha" class="form-control" minlength="6" required>
+            </div>
+            <button type="submit" class="btn btn-gold" style="width: 100%;">Cadastrar</button>
+        </form>
+    </div>
+</div>
+
+<script src="/js/config.js"></script>
+<script src="/js/shared.js"></script>
+
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script>
+
+<script>
+    function toggleAuth(type) {
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        document.querySelectorAll('.auth-toggle button').forEach(b => b.classList.remove('active'));
+        
+        if (type === 'login') {
+            document.getElementById('formLogin').classList.add('active');
+            document.getElementById('btnTabLogin').classList.add('active');
+        } else {
+            document.getElementById('formRegister').classList.add('active');
+            document.getElementById('btnTabRegister').classList.add('active');
+        }
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const senha = document.getElementById('loginSenha').value;
+
+        try {
+            const user = await apiFetch('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, senha })
+            });
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            // Redireciona baseado na Role
+            if (user.role === 'Admin') {
+                window.location.href = '/admin.html';
+            } else {
+                // Retorna para o pedido se veio de lá
+                const redirect = new URLSearchParams(window.location.search).get('redirect');
+                window.location.href = redirect || '/';
+            }
+        } catch (err) {
+            alert('Erro no Login: ' + err.message);
+        }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const data = {
+            nome: document.getElementById('regNome').value,
+            email: document.getElementById('regEmail').value,
+            senha: document.getElementById('regSenha').value,
+            role: "Cliente"
+        };
+
+        try {
+            await apiFetch('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            alert('Cadastro realizado! Agora você pode entrar.');
+            toggleAuth('login');
+        } catch (err) {
+            alert('Erro no Cadastro: ' + err.message);
+        }
+    }
+</script>
+
+</body>
+</html>

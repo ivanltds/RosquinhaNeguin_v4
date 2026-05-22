@@ -1,89 +1,64 @@
 # 🍩 Rosquinha do Neguin — Sistema Completo
 
-Backend **ASP.NET Core 8** + Banco **SQLite** + Frontend **HTML/CSS/JS** em 4 páginas separadas.
+Backend **ASP.NET Core 8** + Banco **SQL Server** + Frontend **HTML/CSS/JS**.
 
 ---
 
-## 📁 Estrutura do Projeto
+## 🔑 Acesso Administrativo (Novo!)
 
-```
-RosquinhaNeguin/
-├── Controllers/
-│   ├── ProdutosController.cs     ← API REST de produtos (com validação)
-│   └── PedidosController.cs      ← API REST de pedidos + stats
-├── Data/
-│   └── AppDbContext.cs           ← EF Core + SQLite + seed dos 32 produtos
-├── Models/
-│   └── Models.cs                 ← Entidades + DTOs
-├── Migrations/                   ← Migration inicial (auto-aplicada)
-├── wwwroot/
-│   ├── index.html                ← Página inicial: Hero + Sobre + Stats
-│   ├── cardapio.html             ← Cardápio completo + Combos (busca da API)
-│   ├── pedido.html               ← Carrinho + Checkout + Histórico
-│   ├── admin.html                ← Painel admin: dashboard, pedidos, produtos
-│   ├── 404.html                  ← Página de erro estilizada
-│   ├── css/shared.css            ← CSS compartilhado
-│   └── js/
-│       ├── config.js             ← ⚙️ Configurações (WhatsApp, API) + helpers
-│       └── shared.js             ← Alias de compatibilidade
-├── Program.cs                    ← Entry point: CORS, Swagger, auto-migrate
-├── appsettings.json              ← String de conexão e configurações
-├── appsettings.Development.json  ← Config de desenvolvimento (logs detalhados)
-└── RosquinhaNeguin.csproj        ← Pacotes NuGet
-```
+O sistema agora possui controle de acesso para a área administrativa.
+- **URL:** `http://localhost:5000/admin.html`
+- **Usuário:** `admin@admin.local`
+- **Senha:** `1234`
+
+> **Nota:** Este usuário é criado automaticamente via Migration/Seed.
 
 ---
 
-## 🚀 Passo a Passo para Executar no seu PC
+## 🐳 Executando com Docker (Recomendado)
 
-### ✅ Pré-requisito 1 — Instalar o .NET 8 SDK
+O projeto está pronto para rodar em containers, facilitando a configuração do SQL Server.
 
-1. Acesse: **https://dotnet.microsoft.com/download/dotnet/8.0**
-2. Baixe o **.NET 8 SDK** para o seu sistema (Windows / Mac / Linux)
-3. Execute o instalador
-4. Abra o **Prompt de Comando** e verifique:
+1. **Certifique-se de ter o Docker Desktop instalado.**
+2. **Abra o terminal na pasta raiz do projeto.**
+3. **Suba os serviços:**
+   ```bash
+   docker-compose up -d --build
    ```
-   dotnet --version
-   ```
-   Deve aparecer algo como `8.0.xxx`
+4. **O que acontece agora?**
+   - Um container com **SQL Server 2022** será iniciado.
+   - O backend será compilado e iniciado na porta **5000**.
+   - As migrações do banco de dados serão aplicadas automaticamente no início.
+5. **Acesse:** `http://localhost:5000`
 
 ---
 
-### 📂 Passo 1 — Organizar a pasta
+## 🚀 Execução Manual (Local)
 
-Coloque a pasta `RosquinhaNeguin` em algum lugar do seu PC, por exemplo:
-```
-C:\Projetos\RosquinhaNeguin\
-```
+### ✅ Pré-requisitos
+1. **.NET 8 SDK** instalado.
+2. **SQL Server** local ou via Docker (porta 1433).
+3. Ferramenta EF Core: `dotnet tool install --global dotnet-ef`
 
----
+### 📂 Passo 1 — Configurar o Banco de Dados
+Se você estiver usando um SQL Server diferente do Docker, ajuste a `ConnectionStrings` no arquivo `appsettings.json`.
 
-### 💻 Passo 2 — Abrir o terminal na pasta do projeto
-
-**Windows:** No Explorador de Arquivos, clique na barra de endereço, digite `cmd` e Enter.
-
-**Mac/Linux:**
+### 💻 Passo 2 — Aplicar Migrations
+Abra o terminal na pasta do projeto e execute:
 ```bash
-cd ~/Projetos/RosquinhaNeguin
+dotnet ef database update
 ```
+*Isso criará as tabelas e fará o seed inicial de produtos e do usuário admin.*
 
----
-
-### 📦 Passo 3 — Restaurar os pacotes (só na primeira vez)
-
-```bash
-dotnet restore
-```
-
----
-
-### ▶️ Passo 4 — Executar o projeto
-
+### ▶️ Passo 3 — Rodar o Projeto
 ```bash
 dotnet run
 ```
 
-O banco `rosquinha.db` é criado automaticamente com todos os 32 produtos já cadastrados!
+---
+
+## 📁 Estrutura do Projeto
+... (manter estrutura anterior, mas atualizar caminhos se necessário) ...
 
 ---
 

@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: rosquinha-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Rosquinha@123
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+
+  app:
+    image: rosquinha-neguin
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rosquinha-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Server=db;Database=RosquinhaDB;User Id=sa;Password=Rosquinha@123;TrustServerCertificate=True
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db

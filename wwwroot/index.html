@@ -1,127 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<!-- Define codificação UTF-8 -->
-<meta charset="UTF-8">
-
-<!-- Responsividade para mobile -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Título da página -->
-<title>Rosquinha do Neguin | O Chef dos Churros</title>
-
-<!-- Ícone da aba -->
-<link rel="icon" href="/favicon.ico">
-
-<!-- Importação de fontes do Google -->
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
-<!-- CSS global compartilhado -->
-<link rel="stylesheet" href="/css/shared.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rosquinha do Neguin | Experiência Artesanal</title>
+    <link rel="icon" href="/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared.css">
 </head>
-
 <body>
 
-<!-- ================= NAVBAR ================= -->
-<nav>
-  <!-- Logo + nome -->
-  <a class="nav-brand" href="/">
-    <img src="/img/logo-200.png" class="nav-logo">
-    <span>Rosquinha do Neguin</span>
-  </a>
+<!-- VLibras -->
+<div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
+</div>
 
-  <!-- Links -->
-  <ul class="nav-links">
-    <li><a href="/" class="active">Início</a></li>
-    <li><a href="/cardapio.html">Cardápio</a></li>
-    <li><a href="/pedido.html">Meu Pedido</a></li>
-  </ul>
-
-  <!-- Carrinho -->
-  <a href="/pedido.html" class="cart-btn">
-    🛒 <span id="cartCount"></span>
-  </a>
+<nav role="navigation">
+  <div class="nav-container">
+      <a class="nav-brand" href="/">
+        <img src="/img/logo-200.png" alt="Logo">
+        <span>Rosquinha do Neguin</span>
+      </a>
+      
+      <div class="mobile-toggle" onclick="toggleMenu()">☰</div>
+      
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Início</a></li>
+        <li><a href="/cardapio.html">Cardápio</a></li>
+        <li class="user-only" style="display: none;"><a href="/meus-pedidos.html">Meus Pedidos</a></li>
+        <li><a href="/pedido.html">Carrinho <span class="cart-count">0</span></a></li>
+        <li id="navAuth">
+            <a href="/login.html" class="btn btn-outline">Entrar</a>
+        </li>
+      </ul>
+  </div>
 </nav>
 
-<!-- ================= HERO ================= -->
-<section class="page-hero">
-  <div class="hero-content">
-    <img src="/img/logo-circle.png" class="nav-logo" style="width: 120px; height: 120px; margin-bottom: 20px;">
-    <h1 class="hero-wordmark">Rosquinha do Neguin</h1>
-    <p class="hero-tagline">O Chef dos <span>Churros</span></p>
-    <div class="hero-badge">✦ Doces Artesanais · Desde 2026 ✦</div>
-    <p class="hero-sub">Sabor caseiro. Toque especial.</p>
-    <div class="hero-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
-      <a class="btn btn-gold" href="/cardapio.html">Ver Cardápio</a>
-      <a class="btn btn-outline" href="#sobre">Nossa História</a>
+<header class="hero-section" id="heroSlider">
+    <div class="hero-slides">
+        <div class="slide active" style="background-image: url('/img/rosca.jpg');"></div>
+        <div class="slide" style="background-image: url('/img/rosca2.jpg');"></div>
+        <div class="slide" style="background-image: url('/img/rosca3.jpg');"></div>
     </div>
-  </div>
+    
+    <div class="hero-content">
+        <img src="/img/logo-circle.png" alt="Logo" class="hero-logo-main">
+        <span class="hero-badge">A Melhor Doceria da Região</span>
+        <h1 class="hero-title">Momentos Doces, <br><span style="color: var(--color-dourado);">Feitos à Mão.</span></h1>
+        <p style="font-size: 1.2rem; margin-bottom: 40px; opacity: 0.9;">O segredo está na paixão por criar o churros perfeito.</p>
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <a href="/cardapio.html" class="btn btn-xl btn-gold">Explorar Cardápio</a>
+            <a href="/pedido.html" class="btn btn-xl btn-outline" style="color: white; border-color: rgba(255,255,255,0.5);">Meu Pedido</a>
+        </div>
+    </div>
+</header>
+
+<section class="container" style="padding: 100px 0;">
+    <h2 class="section-title">Nossas Especialidades</h2>
+    <div class="category-circles">
+        <a href="/cardapio.html?cat=churros" class="cat-item">
+            <div class="cat-img" style="background-image: url('/img/churrus.png');"></div>
+            <h3>Churros</h3>
+        </a>
+        <a href="/cardapio.html?cat=rosquinhas" class="cat-item">
+            <div class="cat-img" style="background-image: url('/img/rosca3.jpg');"></div>
+            <h3>Rosquinhas</h3>
+        </a>
+        <a href="/cardapio.html?cat=salgados" class="cat-item">
+            <div class="cat-img" style="background-image: url('/img/salgados.png');"></div>
+            <h3>Salgados</h3>
+        </a>
+        <a href="/cardapio.html?cat=bebidas" class="cat-item">
+            <div class="cat-img" style="background-image: url('/img/bebidas.png');"></div>
+            <h3>Bebidas</h3>
+        </a>
+    </div>
 </section>
 
-<!-- ================= SOBRE ================= -->
-<section class="sobre" id="sobre" style="padding: 80px 5%; background-color: white;">
-  <div class="container" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center;">
-    <div class="sobre-text">
-      <h2 style="font-size: 2.5rem; color: var(--color-chocolate); margin-bottom: 20px;">Nossa História</h2>
-      <p style="font-size: 1.1rem; color: var(--color-text-sub);">A Rosquinha do Neguin nasceu da paixão por transformar momentos simples em memórias inesquecíveis através do açúcar e canela. O que começou como uma receita de família, hoje é o ponto de encontro de quem busca o melhor churros da cidade, frito na hora e recheado com amor.</p>
+<section class="product-highlight" style="background: white;">
+    <div class="img-stack">
+        <img src="/img/churrus.png" class="img-main" alt="Churros com Nutella">
+        <img src="/img/rosca3.jpg" class="img-sub" alt="Rosquinhas">
     </div>
-    <div style="text-align: center;">
-      <img src="/img/logo-circle.png" style="max-width: 100%; height: auto; border-radius: 50%; box-shadow: var(--shadow-lg);">
-    </div>
-  </div>
-</section>
-
-<!-- ================= STATS ================= -->
-<section class="stats" style="padding: 60px 5%; background-color: var(--color-chocolate); color: var(--color-creme);">
-  <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; text-align: center; max-width: 1000px; margin: 0 auto;">
     <div>
-      <div id="totalProdutos" style="font-size: 3rem; font-weight: 800; color: var(--color-dourado);">32</div>
-      <div style="text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem;">Produtos</div>
+        <h2 style="font-size: 3.5rem; margin-bottom: 30px;">Qualidade em cada <span style="color: var(--color-accent);">mordida.</span></h2>
+        <p style="font-size: 1.1rem; color: var(--color-text-sub); margin-bottom: 30px;">Trabalhamos apenas com as melhores marcas. Nutella real, chocolate belga e uma massa secreta que derrete na boca. Venha descobrir por que somos o Chef dos Churros.</p>
+        <ul style="list-style: none; margin-bottom: 40px;">
+            <li style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--color-accent); font-size: 1.5rem;">✔</span> Frito na hora para você
+            </li>
+            <li style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--color-accent); font-size: 1.5rem;">✔</span> Ingredientes selecionados
+            </li>
+            <li style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <span style="color: var(--color-accent); font-size: 1.5rem;">✔</span> Entrega rápida e segura
+            </li>
+        </ul>
+        <a href="/cardapio.html" class="btn btn-gold">Ir para o Cardápio</a>
     </div>
-    <div>
-      <div id="totalPedidos" style="font-size: 3rem; font-weight: 800; color: var(--color-dourado);">0</div>
-      <div style="text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem;">Pedidos Realizados</div>
-    </div>
-    <div>
-      <div style="font-size: 3rem;">❤️</div>
-      <div style="text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem;">Feito com amor</div>
-    </div>
-  </div>
 </section>
 
-<!-- ================= CTA ================= -->
-<section class="cta-section" style="padding: 100px 5%; text-align: center; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/img/bg-pattern.jpg'); background-size: cover; color: white;">
-  <h2 style="font-size: 3rem; margin-bottom: 30px; font-family: var(--font-titles);">Bateu aquela fome?</h2>
-  <div style="display: flex; gap: 20px; justify-content: center;">
-    <a href="/cardapio.html" class="btn btn-gold" style="font-size: 1.2rem; padding: 15px 40px;">Peça Agora</a>
-    <a id="btnWpp" class="btn btn-outline" style="font-size: 1.2rem; padding: 15px 40px; color: white; border-color: white;">WhatsApp</a>
-  </div>
-</section>
-
-<!-- ================= FOOTER ================= -->
-<footer>
-  <p>© 2026 Rosquinha do Neguin</p>
+<footer style="padding: 100px 8%; background: var(--color-chocolate); color: white; text-align: center;">
+    <img src="/img/logo-200.png" alt="Logo" style="height: 100px; margin-bottom: 40px;">
+    <div style="display: flex; justify-content: center; gap: 50px; margin-bottom: 50px; flex-wrap: wrap;">
+        <div>
+            <h4 style="color: var(--color-dourado); margin-bottom: 15px;">Localização</h4>
+            <p>Rua dos Doces, 123 - Centro</p>
+        </div>
+        <div>
+            <h4 style="color: var(--color-dourado); margin-bottom: 15px;">Horário</h4>
+            <p>Seg a Sáb: 14h às 22h</p>
+        </div>
+        <div>
+            <h4 style="color: var(--color-dourado); margin-bottom: 15px;">Contato</h4>
+            <p>(11) 99999-9999</p>
+        </div>
+    </div>
+    <p style="opacity: 0.5; font-size: 0.8rem;">© 2026 Rosquinha do Neguin. Todos os direitos reservados.</p>
 </footer>
 
-<!-- ================= SCRIPTS ================= -->
+<!-- VLibras -->
+
 <script src="/js/config.js"></script>
 <script src="/js/shared.js"></script>
 
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-// Define link do WhatsApp com base na config
-document.getElementById('btnWpp').href =
-  'https://wa.me/' + CONFIG.whatsapp;
-
-// Busca total de pedidos da API
-apiFetch('/api/pedidos').then(data => {
-  document.getElementById('totalPedidos').textContent = data.length;
-});
-
-// Busca total de produtos da API
-apiFetch('/api/produtos').then(data => {
-  document.getElementById('totalProdutos').textContent = data.length;
-});
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
 </script>
 
 </body>

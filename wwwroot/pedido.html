@@ -20,13 +20,32 @@
 
 <body>
 
+<!-- VLibras -->
+<div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
+</div>
+
 <!-- NAV -->
-<nav>
-  <!-- logo -->
-  <a class="nav-brand" href="/">
-    <img src="/img/logo-200.png">
-    <span>Rosquinha do Neguin</span>
-  </a>
+<nav role="navigation">
+  <div class="nav-container">
+      <a class="nav-brand" href="/">
+        <img src="/img/logo-200.png" alt="Logo">
+        <span>Rosquinha do Neguin</span>
+      </a>
+      
+      <div class="mobile-toggle" onclick="toggleMenu()">☰</div>
+      
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Início</a></li>
+        <li><a href="/cardapio.html">Cardápio</a></li>
+        <li class="user-only" style="display: none;"><a href="/meus-pedidos.html">Meus Pedidos</a></li>
+        <li><a href="/pedido.html" class="active">Carrinho <span class="cart-count">0</span></a></li>
+        <li id="navAuth">
+            <a href="/login.html" class="btn btn-outline">Entrar</a>
+        </li>
+      </ul>
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -35,50 +54,89 @@
 </div>
 
 <!-- LAYOUT -->
-<div class="pedido-layout container" style="max-width: 1000px; margin: 0 auto; padding: 40px 20px; display: grid; grid-template-columns: 1fr 350px; gap: 40px;">
+<div class="pedido-layout container">
 
-  <!-- LISTA DE ITENS -->
-  <div id="cartItems" class="form-card">
-    <h2 style="margin-bottom: 20px; color: var(--color-chocolate);">Seus Produtos</h2>
-    <div id="cartContent">
-        <!-- Preenchido via JS -->
+  <!-- View de Sucesso (Oculta por padrão) -->
+  <div id="successView" class="form-card text-center" style="display: none; padding: 60px; animation: fadeIn 0.5s ease-out; grid-column: 1/-1;">
+    <div style="font-size: 5rem; margin-bottom: 20px;">✅</div>
+    <h1 style="color: var(--color-chocolate); margin-bottom: 15px;">Pedido Recebido!</h1>
+    <p style="font-size: 1.1rem; color: var(--color-text-sub); margin-bottom: 30px;">
+        Seu pedido foi registrado com sucesso e já estamos preparando suas delícias.
+        <br>O número do seu pedido é: <strong id="displayOrderId" style="color: var(--color-dourado);">#0</strong>
+    </p>
+    
+    <div style="background: #fdfaf5; padding: 25px; border-radius: 15px; border: 1px dashed var(--color-dourado); margin-bottom: 40px;">
+        <h3 style="margin-bottom: 10px;">Ficou com alguma dúvida?</h3>
+        <p style="font-size: 0.9rem; margin-bottom: 20px;">Se precisar falar conosco ou acompanhar detalhes, clique no botão abaixo:</p>
+        <button id="btnWhatsSucesso" class="btn btn-gold" style="background: #25D366; border: none;">
+            Chamar no WhatsApp 💬
+        </button>
     </div>
+
+    <a href="/index.html" class="btn btn-outline">Voltar para a Página Inicial</a>
   </div>
 
-  <!-- FORMULÁRIO E FINALIZAÇÃO -->
-  <div class="form-card" style="height: fit-content;">
-    <h2 style="margin-bottom: 20px; color: var(--color-chocolate);">Finalizar</h2>
-    
-    <div class="form-group">
-      <label>Seu Nome</label>
-      <input type="text" id="nomeCliente" class="form-control" placeholder="Como te chamamos?">
-    </div>
+  <div id="cartView" class="pedido-layout" style="display: grid; padding: 0; width: 100%; max-width: none; margin: 0; grid-column: 1/-1;">
+      <!-- LISTA DE ITENS -->
+      <div id="cartItems" class="form-card">
+        <h2 style="margin-bottom: 20px; color: var(--color-chocolate);">Seus Produtos</h2>
+        <div id="cartContent">
+            <!-- Preenchido via JS -->
+        </div>
+      </div>
 
-    <div class="form-group">
-      <label>Forma de Pagamento</label>
-      <select id="formaPagamento" class="form-control">
-        <option value="Pix">Pix</option>
-        <option value="Cartão">Cartão</option>
-        <option value="Dinheiro">Dinheiro</option>
-      </select>
-    </div>
+      <!-- FORMULÁRIO E FINALIZAÇÃO -->
+      <div class="form-card" style="height: fit-content;">
+        <h2 style="margin-bottom: 20px; color: var(--color-chocolate);">Finalizar</h2>
+        
+        <!-- View Logado -->
+        <div id="loggedInFinalize" style="display: none;">
+            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid var(--color-dourado);">
+                <p style="font-size: 0.9rem; color: var(--color-text-sub);">Logado como:</p>
+                <p style="font-weight: 700; color: var(--color-chocolate);" id="userNameDisplay"></p>
+            </div>
 
-    <div id="totalPedido" style="margin: 20px 0; padding-top: 20px; border-top: 1px solid #eee; font-size: 1.5rem; font-weight: 800; text-align: right; color: var(--color-chocolate);">
-        Total: R$ 0,00
-    </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 8px; font-weight: 600;">Forma de Pagamento</label>
+              <select id="formaPagamento" class="form-control">
+                <option value="Pix">Pix</option>
+                <option value="Cartão">Cartão</option>
+                <option value="Dinheiro">Dinheiro</option>
+              </select>
+            </div>
 
-    <button onclick="finalizarPedido()" id="btnFinalizar" class="btn btn-gold" style="width: 100%; font-size: 1.2rem;">
-      Fazer Pedido 🚀
-    </button>
+            <div id="totalPedido" style="margin: 20px 0; padding-top: 20px; border-top: 1px solid #eee; font-size: 1.5rem; font-weight: 800; text-align: right; color: var(--color-chocolate);">
+                Total: R$ 0,00
+            </div>
+
+        <button onclick="finalizarPedido()" id="btnFinalizar" class="btn btn-gold" style="width: 100%; font-size: 1.2rem;">
+          Fazer Pedido 🚀
+        </button>
+        </div>
+
+        <!-- View Deslogado -->
+        <div id="loggedOutFinalize" class="text-center" style="display: none;">
+            <div style="font-size: 3rem; margin-bottom: 15px;">👋</div>
+            <h3 style="margin-bottom: 10px;">Quase lá!</h3>
+            <p style="margin-bottom: 20px; color: var(--color-text-sub); font-size: 0.9rem;">Para finalizar seu pedido e garantir suas rosquinhas, por favor entre em sua conta.</p>
+            <div id="totalPedidoGuest" style="margin-bottom: 20px; font-size: 1.3rem; font-weight: 700; color: var(--color-chocolate);">
+                Total: R$ 0,00
+            </div>
+            <a href="/login.html?redirect=/pedido.html" class="btn btn-gold" style="width: 100%;">Entrar e Finalizar</a>
+        </div>
+      </div>
   </div>
 
 </div>
 
-<!-- JS CONFIG (URL da API) -->
-<script src="/js/config.js"></script>
-
 <!-- JS GLOBAL -->
+<script src="/js/config.js"></script>
 <script src="/js/shared.js"></script>
+
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script>
 
 <script>
 
@@ -94,37 +152,55 @@ function renderCart() {
         <p>Seu carrinho está vazio.</p>
         <a href="/cardapio.html" class="btn btn-outline" style="margin-top:20px;">Voltar ao Cardápio</a>
     </div>`;
-    document.getElementById('totalPedido').textContent = 'Total: R$ 0,00';
+    if (document.getElementById('totalPedido')) document.getElementById('totalPedido').textContent = 'Total: R$ 0,00';
+    if (document.getElementById('totalPedidoGuest')) document.getElementById('totalPedidoGuest').textContent = 'Total: R$ 0,00';
     return;
   }
 
   container.innerHTML = items.map(item => `
-    <div style="display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #eee;">
-      <div style="font-size: 2rem;">${item.emoji}</div>
-      <div style="flex-grow: 1;">
+    <div class="cart-item-row">
+      <div style="font-size: 2.5rem;">${item.emoji}</div>
+      <div class="cart-item-info" style="flex-grow: 1;">
         <div style="font-weight: 700; color: var(--color-chocolate);">${item.nome}</div>
         <div style="font-size: 0.9rem; color: var(--color-text-sub);">${formatBRL(item.preco)} cada</div>
       </div>
-      <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="cart-item-actions" style="display: flex; align-items: center; gap: 10px;">
         <button onclick="changeQty(${item.id}, -1)" class="btn btn-outline" style="padding: 5px 12px;">-</button>
         <span style="font-weight: 800; min-width: 25px; text-align: center;">${item.qty}</span>
         <button onclick="changeQty(${item.id}, 1)" class="btn btn-outline" style="padding: 5px 12px;">+</button>
       </div>
-      <div style="font-weight: 700; min-width: 80px; text-align: right;">
+      <div class="cart-item-price" style="font-weight: 700; min-width: 80px; text-align: right;">
         ${formatBRL(item.preco * item.qty)}
       </div>
     </div>
   `).join('');
 
-  document.getElementById('totalPedido').textContent = 'Total: ' + formatBRL(cartTotal());
+  const total = formatBRL(cartTotal());
+  if (document.getElementById('totalPedido')) document.getElementById('totalPedido').textContent = 'Total: ' + total;
+  if (document.getElementById('totalPedidoGuest')) document.getElementById('totalPedidoGuest').textContent = 'Total: ' + total;
 }
 
 /* altera quantidade */
-function changeQty(id, delta) {
+async function changeQty(id, delta) {
   const cart = getCart();
   const key = String(id);
   
   if (cart[key]) {
+    if (delta > 0) {
+        try {
+            const produto = await apiFetch('/api/produtos/' + id);
+            if (produto.estoque <= cart[key].qty) {
+                showToast(`📦 Limite de estoque atingido! (${produto.estoque} unidades)`, 'warning');
+                cart[key].qty = produto.estoque; // Ajusta para o máximo
+                saveCart(cart);
+                renderCart();
+                return;
+            }
+        } catch (e) {
+            console.error('Erro ao verificar estoque:', e);
+        }
+    }
+
     cart[key].qty += delta;
     if (cart[key].qty <= 0) delete cart[key];
     saveCart(cart);
@@ -135,7 +211,8 @@ function changeQty(id, delta) {
 /* FINALIZAR PEDIDO */
 async function finalizarPedido() {
   const items = Object.values(getCart());
-  const nome = document.getElementById('nomeCliente').value.trim();
+  const user = JSON.parse(localStorage.getItem('user'));
+  const nome = user.nome;
   const pagamento = document.getElementById('formaPagamento').value;
 
   if (!items.length) {
@@ -143,21 +220,15 @@ async function finalizarPedido() {
     return;
   }
 
-  if (!nome) {
-    showToast('Por favor, informe seu nome.', 'error');
-    document.getElementById('nomeCliente').focus();
-    return;
-  }
-
   const btn = document.getElementById('btnFinalizar');
   btn.disabled = true;
-  btn.textContent = 'Enviando...';
+  btn.textContent = 'Processando...';
 
   try {
     // 1. Enviar para a API (Backend)
     const pedidoApi = {
         nomeCliente: nome,
-        observacao: `Pagamento: ${pagamento}`,
+        observacao: `Pagamento: ${pagamento} | Via Site`,
         itens: items.map(i => ({ produtoId: i.id, quantidade: i.qty }))
     };
 
@@ -166,30 +237,28 @@ async function finalizarPedido() {
       body: JSON.stringify(pedidoApi)
     });
 
-    showToast('Pedido realizado com sucesso!', 'success');
-
-    // 2. Montar mensagem para o WhatsApp
-    let msg = `*Novo Pedido - ${CONFIG.nomeLoja}*\n`;
+    // 2. Preparar Mensagem de WhatsApp (para o botão da tela de sucesso)
+    let msg = `*Dúvida sobre o Pedido - ${CONFIG.nomeLoja}*\n`;
     msg += `-------------------------------\n`;
+    msg += `🆔 *Pedido:* #${res.id}\n`;
     msg += `👤 *Cliente:* ${nome}\n`;
-    msg += `💳 *Pagamento:* ${pagamento}\n`;
     msg += `-------------------------------\n`;
+    msg += `Estou com uma dúvida sobre meu pedido realizado agora no site.`;
+
+    const whatsUrl = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`;
     
-    items.forEach(i => {
-      msg += `${i.qty}x ${i.emoji} ${i.nome} - ${formatBRL(i.preco * i.qty)}\n`;
-    });
+    // 3. Configurar botão de WhatsApp na tela de sucesso
+    const btnWhats = document.getElementById('btnWhatsSucesso');
+    btnWhats.onclick = () => window.open(whatsUrl, '_blank');
 
-    msg += `-------------------------------\n`;
-    msg += `💰 *TOTAL: ${formatBRL(cartTotal())}*\n\n`;
-    msg += `_Pedido gerado via Site_`;
+    // 4. Mostrar Tela de Sucesso
+    document.getElementById('displayOrderId').textContent = `#${res.id}`;
+    document.getElementById('cartView').style.display = 'none';
+    document.getElementById('successView').style.display = 'block';
 
-    // Limpar carrinho e redirecionar
+    // 5. Limpar carrinho
     clearCart();
-
-    setTimeout(() => {
-      window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`);
-      window.location.href = '/index.html';
-    }, 1000);
+    updateCartBadge();
 
   } catch (e) {
     console.error(e);
@@ -200,7 +269,33 @@ async function finalizarPedido() {
 }
 
 /* inicialização */
+function checkAuth() {
+    const userJson = localStorage.getItem('user');
+    const loggedInFinalize = document.getElementById('loggedInFinalize');
+    const loggedOutFinalize = document.getElementById('loggedOutFinalize');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+
+    if (!userJson) {
+        loggedInFinalize.style.display = 'none';
+        loggedOutFinalize.style.display = 'block';
+        return false;
+    }
+
+    const user = JSON.parse(userJson);
+    loggedInFinalize.style.display = 'block';
+    loggedOutFinalize.style.display = 'none';
+    
+    userNameDisplay.textContent = user.nome;
+    return true;
+}
+
+function logout() {
+    localStorage.removeItem('user');
+    window.location.reload();
+}
+
 renderCart();
+checkAuth();
 </script>
 
 </body>

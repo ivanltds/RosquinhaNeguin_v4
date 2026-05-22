@@ -10,19 +10,31 @@
 </head>
 <body>
 
-<nav>
-  <a class="nav-brand" href="/">
-    <img src="/img/logo-200.png" class="nav-logo">
-    <span>Rosquinha do Neguin</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="/">Início</a></li>
-    <li><a href="/cardapio.html" class="active">Cardápio</a></li>
-    <li><a href="/pedido.html">Meu Pedido</a></li>
-  </ul>
-  <a href="/pedido.html" class="cart-btn">
-    🛒 <span id="cartCount" class="cart-count">0</span>
-  </a>
+<!-- VLibras -->
+<div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
+</div>
+
+<nav role="navigation">
+  <div class="nav-container">
+      <a class="nav-brand" href="/">
+        <img src="/img/logo-200.png" alt="Logo">
+        <span>Rosquinha do Neguin</span>
+      </a>
+      
+      <div class="mobile-toggle" onclick="toggleMenu()">☰</div>
+      
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Início</a></li>
+        <li><a href="/cardapio.html" class="active">Cardápio</a></li>
+        <li class="user-only" style="display: none;"><a href="/meus-pedidos.html">Meus Pedidos</a></li>
+        <li><a href="/pedido.html">Carrinho <span class="cart-count">0</span></a></li>
+        <li id="navAuth">
+            <a href="/login.html" class="btn btn-outline">Entrar</a>
+        </li>
+      </ul>
+  </div>
 </nav>
 
 <div class="page-hero">
@@ -31,7 +43,7 @@
 </div>
 
 <!-- Container do Cardápio -->
-<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+<div class="container">
     
     <!-- Filtros (Abas) -->
     <div class="cardapio-nav">
@@ -55,11 +67,19 @@
 </div>
 
 <footer>
-  <p>© 2026 Rosquinha do Neguin</p>
+  <div class="container">
+    <img src="/img/logo-200.png" alt="Logo" style="height: 60px; margin-bottom: 20px;">
+    <p>© 2026 Rosquinha do Neguin - Todos os direitos reservados</p>
+  </div>
 </footer>
 
 <script src="/js/config.js"></script>
 <script src="/js/shared.js"></script>
+
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script>
 
 <script>
 // Cache de produtos para evitar requisições repetidas
@@ -68,15 +88,15 @@ const cache = {};
 function renderCard(p) {
     return `
     <div class="product-card">
-      <div class="product-emoji" style="font-size: 3rem; margin-bottom: 10px;">${p.emoji}</div>
+      <div class="product-emoji">${p.emoji}</div>
       <div class="product-info">
-        <div class="product-name" style="font-weight: 700; font-size: 1.2rem; color: var(--color-chocolate);">${p.nome}</div>
-        <div class="product-desc" style="font-size: 0.9rem; color: var(--color-text-sub); margin: 10px 0;">${p.descricao || ''}</div>
+        <div class="product-name">${p.nome}</div>
+        <div class="product-desc">${p.descricao || ''}</div>
       </div>
-      <div class="product-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-        <div class="product-price" style="font-weight: 800; color: var(--color-chocolate);">${formatBRL(p.preco)}</div>
-        <button class="btn btn-gold btn-sm" onclick="addItem(${p.id}, '${p.nome}', ${p.preco}, '${p.emoji}')" style="padding: 5px 15px;">
-          +
+      <div class="product-footer">
+        <div class="product-price">${formatBRL(p.preco)}</div>
+        <button class="btn btn-gold btn-sm" onclick="addItem(${p.id}, '${p.nome}', ${p.preco}, '${p.emoji}')">
+          Adicionar
         </button>
       </div>
     </div>`;
@@ -114,8 +134,8 @@ async function filtrar(cat, btn) {
         }
     } catch (err) {
         console.error(err);
-        status.textContent = `Erro ao carregar: ${err.message}`;
-        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:red;">Não foi possível carregar os produtos. Verifique se o servidor está rodando.</p>';
+        status.innerHTML = `<span style="color: red; font-weight: bold;">Erro ao carregar: ${err.message}</span>`;
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Por favor, tente novamente ou verifique sua conexão.</p>';
     }
 }
 

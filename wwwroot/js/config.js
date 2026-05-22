@@ -37,28 +37,46 @@ function addItem(id, nome, preco, emoji) {
     addToCart(id, nome, preco, emoji, event);
 }
 
-function addToCart(id, nome, preco, emoji, evt = null) {
+async function addToCart(id, nome, preco, emoji, evt = null) {
   const cart = getCart();
   const key = String(id);
-  if (cart[key]) cart[key].qty++;
-  else cart[key] = { id, nome, preco, emoji, qty: 1 };
-  saveCart(cart);
-  
-  // Feedback visual no botão
-  const btn = evt?.currentTarget || (evt?.target?.closest ? evt.target.closest('button') : null);
-  if (btn) {
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '✅';
-    btn.classList.add('btn-success');
-    setTimeout(() => {
-      btn.innerHTML = originalText;
-      btn.classList.remove('btn-success');
-    }, 800);
-  }
-  
-  showToast(emoji + ' ' + nome + ' adicionado ao carrinho!', 'success');
-}
 
+  try {
+    // Busca estoque atualizado da API
+    const produto = await apiFetch('/api/produtos/' + id);
+    const qtyNoCarrinho = cart[key] ? cart[key].qty : 0;
+
+    if (produto.estoque <= qtyNoCarrinho) {
+      showToast(`📦 Estoque insuficiente! Apenas ${produto.estoque} unidades de ${nome} disponíveis.`, 'warning');
+      return;
+    }
+
+    if (cart[key]) cart[key].qty++;
+    else cart[key] = { id, nome, preco, emoji, qty: 1 };
+
+    saveCart(cart);
+
+    // Feedback visual no botão
+    const btn = evt?.currentTarget || (evt?.target?.closest ? evt.target.closest('button') : null);
+    if (btn) {
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '✅';
+      btn.classList.add('btn-success');
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+      }, 800);
+    }
+
+    showToast(emoji + ' ' + nome + ' adicionado ao carrinho!', 'success');
+  } catch (err) {
+    console.error('Erro ao verificar estoque:', err);
+    // Fallback: adiciona sem verificar se a API falhar
+    if (cart[key]) cart[key].qty++;
+    else cart[key] = { id, nome, preco, emoji, qty: 1 };
+    saveCart(cart);
+  }
+}
 function clearCart() {
   localStorage.removeItem(CART_KEY);
   updateCartBadge();
@@ -92,15 +110,25 @@ function updateCartBadge() {
 // ════════════════════════════════════════════════
 
 async function apiFetch(path, opts = {}) {
-  const res = await fetch(CONFIG.apiBase + path, {
-    headers: { 'Content-Type': 'application/json', ...opts.headers },
-    ...opts,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ erro: res.statusText }));
-    throw new Error(err.erro || 'Erro na requisição');
+  try {
+    const res = await fetch(CONFIG.apiBase + path, {
+      headers: { 'Content-Type': 'application/json', ...opts.headers },
+      credentials: 'include',
+      ...opts,
+    });
+    
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ erro: `Erro HTTP ${res.status}` }));
+      const msg = errData.erro || errData.message || `Falha na requisição (${res.status})`;
+      console.error(`[API Error ${res.status}] ${path}:`, msg);
+      throw new Error(msg);
+    }
+    
+    return res.status === 204 ? null : res.json();
+  } catch (err) {
+    console.error(`[apiFetch Connection Error] ${path}:`, err);
+    throw err;
   }
-  return res.status === 204 ? null : res.json();
 }
 
 // ════════════════════════════════════════════════

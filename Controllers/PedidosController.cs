@@ -1,206 +1,163 @@
-using Microsoft.AspNetCore.Mvc; // Permite criar endpoints HTTP
-using Microsoft.EntityFrameworkCore; // Usado para consultas no banco (Include, ToListAsync, etc)
-using RosquinhaNeguin.Data; // Contexto do banco (AppDbContext)
-using RosquinhaNeguin.Models; // Models: Pedido, ItemPedido, DTOs
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RosquinhaNeguin.Data;
+using RosquinhaNeguin.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RosquinhaNeguin.Controllers;
 
-// Define que é uma API
 [ApiController]
-
-// Rota base → /api/pedidos
 [Route("api/pedidos")]
+[Authorize]
 public class PedidosController(AppDbContext db) : ControllerBase
 {
-    // Lista de status válidos (controle de fluxo do pedido)
-    static readonly string[] StatusValidos =
-        ["pendente", "confirmado", "preparo", "entregue", "cancelado"];
+    static readonly string[] StatusValidos = ["pendente", "confirmado", "preparo", "entregue", "cancelado"];
 
-    // ─────────────────────────────────────────────
-    // GET /api/pedidos
-    // Lista todos os pedidos (com filtro opcional por status)
-    // ─────────────────────────────────────────────
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll([FromQuery] string? status)
     {
-        // Inclui os itens do pedido (JOIN automático)
         var q = db.Pedidos.Include(p => p.Itens).AsQueryable();
-
-        // Filtra por status se informado
-        if (!string.IsNullOrEmpty(status))
-            q = q.Where(p => p.Status == status);
-
-        // Ordena do mais recente para o mais antigo
+        if (!string.IsNullOrEmpty(status)) q = q.Where(p => p.Status == status);
         return Ok(await q.OrderByDescending(p => p.CriadoEm).ToListAsync());
     }
 
-    // ─────────────────────────────────────────────
-    // GET /api/pedidos/{id}
-    // Retorna um pedido específico
-    // ─────────────────────────────────────────────
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
-        var p = await db.Pedidos
-            .Include(x => x.Itens) // traz os itens junto
-            .FirstOrDefaultAsync(x => x.Id == id);
-
-        // Se não encontrou → 404
-        return p is null 
-            ? NotFound(new { erro = "Pedido não encontrado." }) 
-            : Ok(p);
+        var p = await db.Pedidos.Include(x => x.Itens).FirstOrDefaultAsync(x => x.Id == id);
+        return p is null ? NotFound(new { erro = "Pedido não encontrado." }) : Ok(p);
     }
 
-    // ─────────────────────────────────────────────
-    // POST /api/pedidos
-    // Cria um novo pedido
-    // ─────────────────────────────────────────────
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyOrders()
+    {
+        try 
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr)) return Unauthorized(new { erro = "Usuário não identificado na sessão." });
+
+            var userId = int.Parse(userIdStr);
+            var orders = await db.Pedidos
+                .Include(p => p.Itens)
+                .Where(p => p.UsuarioId == userId)
+                .OrderByDescending(p => p.CriadoEm)
+                .ToListAsync();
+
+            return Ok(orders);
+        }
+        catch (Exception ex)
+        {
+            // Log do erro para debug (visível no console do servidor)
+            Console.WriteLine($"[ERRO GetMyOrders] {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+            return StatusCode(500, new { erro = "Erro interno ao buscar pedidos", detalhe = ex.Message });
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(CriarPedidoDto dto)
     {
-        // Validação: precisa ter pelo menos 1 item
+        // ... (resto do método)
         if (dto.Itens == null || dto.Itens.Count == 0)
             return BadRequest(new { erro = "O pedido deve ter pelo menos 1 item." });
 
-        // Cria objeto pedido
-        var pedido = new Pedido
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        int? userId = string.IsNullOrEmpty(userIdStr) ? null : int.Parse(userIdStr);
+
+        using var transaction = await db.Database.BeginTransactionAsync();
+        try
         {
-            NomeCliente = dto.NomeCliente?.Trim(),
-            Telefone = dto.Telefone?.Trim(),
-            Observacao = dto.Observacao?.Trim(),
-            CriadoEm = DateTime.UtcNow,
-            Status = "pendente"
-        };
-
-        // Percorre cada item enviado
-        foreach (var item in dto.Itens)
-        {
-            // Validação de quantidade
-            if (item.Quantidade <= 0)
-                return BadRequest(new { erro = "Quantidade deve ser maior que zero." });
-
-            // Busca produto no banco
-            var produto = await db.Produtos.FindAsync(item.ProdutoId);
-
-            // Produto não existe
-            if (produto is null)
-                return BadRequest(new { erro = $"Produto #{item.ProdutoId} não encontrado." });
-
-            // Produto desativado
-            if (!produto.Ativo)
-                return BadRequest(new { erro = $"Produto '{produto.Nome}' não está disponível." });
-
-            // Adiciona item ao pedido
-            pedido.Itens.Add(new ItemPedido
+            var pedido = new Pedido
             {
-                ProdutoId = produto.Id,
-                NomeProduto = produto.Nome,
-                EmojiProduto = produto.Emoji,
-                Quantidade = item.Quantidade,
-                PrecoUnitario = produto.Preco
-            });
+                UsuarioId = userId,
+                NomeCliente = dto.NomeCliente?.Trim(),
+                Telefone = dto.Telefone?.Trim(),
+                Observacao = dto.Observacao?.Trim(),
+                CriadoEm = DateTime.UtcNow,
+                Status = "pendente"
+            };
+
+            foreach (var itemDto in dto.Itens)
+            {
+                var produto = await db.Produtos.FindAsync(itemDto.ProdutoId);
+                if (produto is null) throw new Exception($"Produto #{itemDto.ProdutoId} não encontrado.");
+                if (!produto.Ativo) throw new Exception($"Produto '{produto.Nome}' não está disponível.");
+                if (produto.Estoque < itemDto.Quantidade) throw new Exception($"Estoque insuficiente para '{produto.Nome}'.");
+
+                // Baixa de estoque
+                produto.Estoque -= itemDto.Quantidade;
+
+                pedido.Itens.Add(new ItemPedido
+                {
+                    ProdutoId = produto.Id,
+                    NomeProduto = produto.Nome,
+                    EmojiProduto = produto.Emoji,
+                    Quantidade = itemDto.Quantidade,
+                    PrecoUnitario = produto.Preco
+                });
+
+                // Registrar movimentação
+                db.MovimentacoesEstoque.Add(new MovimentacaoEstoque {
+                    ProdutoId = produto.Id,
+                    Quantidade = itemDto.Quantidade,
+                    Tipo = "Saida",
+                    Data = DateTime.UtcNow
+                });
+            }
+
+            pedido.Total = pedido.Itens.Sum(i => i.Subtotal);
+            db.Pedidos.Add(pedido);
+            
+            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return CreatedAtAction(nameof(Get), new { id = pedido.Id }, pedido);
         }
-
-        // Calcula total do pedido
-        pedido.Total = pedido.Itens.Sum(i => i.Subtotal);
-
-        // Salva no banco
-        db.Pedidos.Add(pedido);
-        await db.SaveChangesAsync();
-
-        // Retorna 201 Created
-        return CreatedAtAction(nameof(Get), new { id = pedido.Id }, pedido);
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return BadRequest(new { erro = ex.Message });
+        }
     }
 
-    // ─────────────────────────────────────────────
-    // PATCH /api/pedidos/{id}/status
-    // Atualiza o status do pedido
-    // ─────────────────────────────────────────────
     [HttpPatch("{id:int}/status")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateStatus(int id, AtualizarStatusDto dto)
     {
-        // Valida status
         if (!StatusValidos.Contains(dto.Status))
-            return BadRequest(new 
-            { 
-                erro = $"Status inválido. Use: {string.Join(", ", StatusValidos)}" 
-            });
+            return BadRequest(new { erro = $"Status inválido." });
 
-        // Busca pedido
         var pedido = await db.Pedidos.FindAsync(id);
+        if (pedido is null) return NotFound(new { erro = "Pedido não encontrado." });
 
-        if (pedido is null)
-            return NotFound(new { erro = "Pedido não encontrado." });
-
-        // Atualiza status
         pedido.Status = dto.Status;
-
         await db.SaveChangesAsync();
-
         return Ok(pedido);
     }
 
-    // ─────────────────────────────────────────────
-    // DELETE /api/pedidos/{id}
-    // Remove pedido e seus itens
-    // ─────────────────────────────────────────────
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var pedido = await db.Pedidos
-            .Include(p => p.Itens)
-            .FirstOrDefaultAsync(p => p.Id == id);
-
-        if (pedido is null)
-            return NotFound(new { erro = "Pedido não encontrado." });
-
-        // Remove itens primeiro (boa prática)
-        db.ItensPedido.RemoveRange(pedido.Itens);
-
-        // Remove pedido
-        db.Pedidos.Remove(pedido);
-
-        await db.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    // ─────────────────────────────────────────────
-    // GET /api/pedidos/stats
-    // Estatísticas para painel admin
-    // ─────────────────────────────────────────────
     [HttpGet("stats")]
-    public async Task<IActionResult> Stats()
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetStats()
     {
-        var hoje = DateTime.UtcNow.Date;
-
-        // Carrega todos pedidos com itens
-        var pedidos = await db.Pedidos
-            .Include(p => p.Itens)
+        var porStatus = await db.Pedidos
+            .GroupBy(p => p.Status)
+            .Select(g => new { status = g.Key, count = g.Count() })
             .ToListAsync();
 
-        // Calcula métricas
-        var stats = new
-        {
-            total = pedidos.Count,
+        return Ok(new { porStatus });
+    }
 
-            hoje = pedidos.Count(p => p.CriadoEm.Date == hoje),
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var pedido = await db.Pedidos.Include(p => p.Itens).FirstOrDefaultAsync(p => p.Id == id);
+        if (pedido is null) return NotFound(new { erro = "Pedido não encontrado." });
 
-            faturamentoTotal = pedidos
-                .Where(p => p.Status != "cancelado")
-                .Sum(p => p.Total),
-
-            faturamentoHoje = pedidos
-                .Where(p => p.CriadoEm.Date == hoje && p.Status != "cancelado")
-                .Sum(p => p.Total),
-
-            porStatus = StatusValidos.Select(s => new 
-            { 
-                status = s, 
-                count = pedidos.Count(p => p.Status == s) 
-            }),
-        };
-
-        return Ok(stats);
+        db.ItensPedido.RemoveRange(pedido.Itens);
+        db.Pedidos.Remove(pedido);
+        await db.SaveChangesAsync();
+        return NoContent();
     }
 }

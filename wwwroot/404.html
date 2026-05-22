@@ -19,6 +19,13 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 </style>
 </head>
 <body>
+
+<!-- VLibras -->
+<div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
+</div>
+
 <div style="position:relative">
   <div class="nf-code">404</div>
   <div class="not-found nf-content">
@@ -31,5 +38,11 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
     </div>
   </div>
 </div>
+
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script>
+
 </body>
 </html>
