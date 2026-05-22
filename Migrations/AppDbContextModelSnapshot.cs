@@ -22,6 +22,43 @@ namespace RosquinhaNeguin.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("RosquinhaNeguin.Models.CartaoCredito", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Bandeira")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NomeTitular")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NumeroMascarado")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Validade")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("CartoesCredito");
+                });
+
             modelBuilder.Entity("RosquinhaNeguin.Models.Categoria", b =>
                 {
                     b.Property<int>("Id")
@@ -63,6 +100,47 @@ namespace RosquinhaNeguin.Migrations
                         {
                             Id = 5,
                             Nome = "combos"
+                        });
+                });
+
+            modelBuilder.Entity("RosquinhaNeguin.Models.Configuracao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Chave")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Valor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Configuracoes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Chave = "PixKey",
+                            Valor = "5511999999999"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Chave = "PixBeneficiario",
+                            Valor = "Rosquinha do Neguin Ltda"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Chave = "PixCidade",
+                            Valor = "Sao Paulo"
                         });
                 });
 
@@ -169,8 +247,15 @@ namespace RosquinhaNeguin.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CartaoId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CriadoEm")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("MetodoPagamento")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NomeCliente")
                         .HasColumnType("nvarchar(max)");
@@ -189,9 +274,16 @@ namespace RosquinhaNeguin.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("CartaoId");
+
                     b.HasIndex("Status");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("Pedidos");
                 });
@@ -546,7 +638,7 @@ namespace RosquinhaNeguin.Migrations
                             Descricao = "1 Churros + 1 Donut",
                             Emoji = "🍬",
                             Estoque = 50,
-                            Nome = "Combo Doce",
+                            Nome = "Combo Doces",
                             Preco = 16m
                         },
                         new
@@ -627,6 +719,17 @@ namespace RosquinhaNeguin.Migrations
                     b.ToTable("Usuarios");
                 });
 
+            modelBuilder.Entity("RosquinhaNeguin.Models.CartaoCredito", b =>
+                {
+                    b.HasOne("RosquinhaNeguin.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("RosquinhaNeguin.Models.ItemPedido", b =>
                 {
                     b.HasOne("RosquinhaNeguin.Models.Pedido", "Pedido")
@@ -666,6 +769,22 @@ namespace RosquinhaNeguin.Migrations
                         .IsRequired();
 
                     b.Navigation("Produto");
+                });
+
+            modelBuilder.Entity("RosquinhaNeguin.Models.Pedido", b =>
+                {
+                    b.HasOne("RosquinhaNeguin.Models.CartaoCredito", "Cartao")
+                        .WithMany()
+                        .HasForeignKey("CartaoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("RosquinhaNeguin.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId");
+
+                    b.Navigation("Cartao");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("RosquinhaNeguin.Models.Produto", b =>

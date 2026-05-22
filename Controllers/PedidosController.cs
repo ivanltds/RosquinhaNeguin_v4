@@ -74,6 +74,8 @@ public class PedidosController(AppDbContext db) : ControllerBase
                 NomeCliente = dto.NomeCliente?.Trim(),
                 Telefone = dto.Telefone?.Trim(),
                 Observacao = dto.Observacao?.Trim(),
+                MetodoPagamento = dto.MetodoPagamento ?? "Dinheiro",
+                CartaoId = dto.CartaoId,
                 CriadoEm = DateTime.UtcNow,
                 Status = "pendente"
             };
@@ -112,6 +114,31 @@ public class PedidosController(AppDbContext db) : ControllerBase
             await db.SaveChangesAsync();
             await transaction.CommitAsync();
 
+            if (pedido.MetodoPagamento == "Pix")
+            {
+                var pixKey = (await db.Configuracoes.FirstOrDefaultAsync(c => c.Chave == "PixKey"))?.Valor ?? "5511999999999";
+                var pixBeneficiario = (await db.Configuracoes.FirstOrDefaultAsync(c => c.Chave == "PixBeneficiario"))?.Valor ?? "Rosquinha do Neguin Ltda";
+                var pixCidade = (await db.Configuracoes.FirstOrDefaultAsync(c => c.Chave == "PixCidade"))?.Valor ?? "Sao Paulo";
+
+                string pixCopiaECola = Helpers.PixGenerator.GeneratePayload(pixKey, pixBeneficiario, pixCidade, pedido.Total, $"PED{pedido.Id}");
+
+                return CreatedAtAction(nameof(Get), new { id = pedido.Id }, new
+                {
+                    pedido.Id,
+                    pedido.UsuarioId,
+                    pedido.NomeCliente,
+                    pedido.Telefone,
+                    pedido.Observacao,
+                    pedido.CriadoEm,
+                    pedido.Status,
+                    pedido.Total,
+                    pedido.MetodoPagamento,
+                    pedido.CartaoId,
+                    pedido.Itens,
+                    pixCopiaECola
+                });
+            }
+
             return CreatedAtAction(nameof(Get), new { id = pedido.Id }, pedido);
         }
         catch (Exception ex)
@@ -119,6 +146,33 @@ public class PedidosController(AppDbContext db) : ControllerBase
             await transaction.RollbackAsync();
             return BadRequest(new { erro = ex.Message });
         }
+    }
+
+    [HttpPost("{id:int}/simular-pagamento")]
+    public async Task<IActionResult> SimularPagamento(int id)
+    {
+        var pedido = await db.Pedidos.FindAsync(id);
+        if (pedido is null) return NotFound(new { erro = "Pedido não encontrado." });
+
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return Unauthorized(new { erro = "Usuário não autenticado." });
+        int userId = int.Parse(userIdStr);
+
+        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (pedido.UsuarioId != userId && userRole != "Admin")
+        {
+            return Forbid();
+        }
+
+        if (pedido.Status != "pendente")
+        {
+            return BadRequest(new { erro = "Apenas pedidos pendentes podem ser pagos." });
+        }
+
+        pedido.Status = "confirmado";
+        await db.SaveChangesAsync();
+
+        return Ok(new { mensagem = "Pagamento simulado com sucesso!", status = pedido.Status });
     }
 
     [HttpPatch("{id:int}/status")]

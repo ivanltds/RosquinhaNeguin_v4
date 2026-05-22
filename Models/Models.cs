@@ -60,6 +60,9 @@ public class Pedido
     public string? Telefone { get; set; }
     public string? Observacao { get; set; }
     public decimal Total { get; set; }
+    public string MetodoPagamento { get; set; } = "Dinheiro"; // Pix | Cartão | Dinheiro
+    public int? CartaoId { get; set; }
+    public CartaoCredito? Cartao { get; set; }
     public List<ItemPedido> Itens { get; set; } = new();
 }
 
@@ -77,8 +80,29 @@ public class ItemPedido
     public decimal Subtotal => Quantidade * PrecoUnitario;
 }
 
-public record CriarPedidoDto(string? NomeCliente, string? Telefone, string? Observacao, List<ItemPedidoDto> Itens);
+public class CartaoCredito
+{
+    public int Id { get; set; }
+    public int UsuarioId { get; set; }
+    public Usuario? Usuario { get; set; }
+    public string NumeroMascarado { get; set; } = ""; // ex: **** **** **** 1234
+    public string Bandeira { get; set; } = ""; // Visa, Mastercard, etc.
+    public string NomeTitular { get; set; } = "";
+    public string Validade { get; set; } = ""; // MM/AA
+    public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
+}
+
+public class Configuracao
+{
+    public int Id { get; set; }
+    public string Chave { get; set; } = "";
+    public string Valor { get; set; } = "";
+}
+
+public record CriarPedidoDto(string? NomeCliente, string? Telefone, string? Observacao, string? MetodoPagamento, int? CartaoId, List<ItemPedidoDto> Itens);
 public record ItemPedidoDto(int ProdutoId, int Quantidade);
 public record AtualizarStatusDto(string Status);
 public record LoginDto(string Email, string Senha);
 public record RegisterDto(string Nome, string Email, string Senha, string? Role);
+public record CartaoCreditoDto(string Numero, string NomeTitular, string Validade);
+public record SalvarConfiguracaoDto(string Chave, string Valor);

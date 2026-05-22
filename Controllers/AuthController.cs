@@ -19,16 +19,22 @@ public class AuthController(AppDbContext db) : ControllerBase
         try 
         {
             var user = await db.Usuarios.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            Console.WriteLine($"[Login Debug] Recebido Email: '{dto.Email}', Senha: '{dto.Senha}' (Length: {dto.Senha?.Length})");
             
             if (user == null || !BC.Verify(dto.Senha, user.SenhaHash))
             {
                 if (user != null) {
+                    Console.WriteLine($"[Login Debug] Falha de autenticação para o usuário: {dto.Email}. Senha incorreta.");
                     await db.LogsLogin.AddAsync(new LogLogin { 
                         UsuarioId = user.Id, 
                         Ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                         Sucesso = false 
                     });
                     await db.SaveChangesAsync();
+                }
+                else
+                {
+                    Console.WriteLine($"[Login Debug] Falha de autenticação: Usuário {dto.Email} não encontrado.");
                 }
                 return Unauthorized(new { erro = "E-mail ou senha incorretos." });
             }

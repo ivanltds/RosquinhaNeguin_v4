@@ -12,6 +12,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque => Set<MovimentacaoEstoque>();
     public DbSet<LogLogin> LogsLogin => Set<LogLogin>();
+    public DbSet<CartaoCredito> CartoesCredito => Set<CartaoCredito>();
+    public DbSet<Configuracao> Configuracoes => Set<Configuracao>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -76,6 +78,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             new Produto { Id=30, Nome="Combo Amigos",           Descricao="4 Churros + 4 Rosquinhas",              Emoji="👯", Preco=35, CategoriaId=5, Estoque=50 },
             new Produto { Id=31, Nome="Combo Lanche",           Descricao="Salgado + Rosquinha + Refri",           Emoji="🥙", Preco=18, CategoriaId=5, Estoque=50 },
             new Produto { Id=32, Nome="Combo Completo",         Descricao="2 Churros + 2 Salgados + 2 Bebidas",   Emoji="⭐", Preco=30, CategoriaId=5, Estoque=50 }
+        );
+
+        // Relacionamentos e índices para CartaoCredito
+        mb.Entity<CartaoCredito>()
+            .HasOne(c => c.Usuario)
+            .WithMany()
+            .HasForeignKey(c => c.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        mb.Entity<Pedido>()
+            .HasOne(p => p.Cartao)
+            .WithMany()
+            .HasForeignKey(p => p.CartaoId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Seed de Configurações
+        mb.Entity<Configuracao>().HasData(
+            new Configuracao { Id = 1, Chave = "PixKey", Valor = "5511999999999" },
+            new Configuracao { Id = 2, Chave = "PixBeneficiario", Valor = "Rosquinha do Neguin Ltda" },
+            new Configuracao { Id = 3, Chave = "PixCidade", Valor = "Sao Paulo" }
         );
     }
 }

@@ -105,6 +105,9 @@
             <button class="sidebar-link" onclick="showSection('estoque', this)" aria-label="Gerenciar Estoque">
                 📦 Estoque
             </button>
+            <button class="sidebar-link" onclick="showSection('configuracoes', this)" aria-label="Configurações Pix">
+                ⚙️ Configurações Pix
+            </button>
         </div>
         <div class="sidebar-section" style="margin-top: auto; padding: 20px;">
             <button class="btn btn-outline" style="width: 100%;" onclick="logout()">Sair</button>
@@ -227,6 +230,32 @@
                 </form>
             </div>
         </section>
+
+        <!-- SEÇÃO: CONFIGURAÇÕES PIX -->
+        <section id="section-configuracoes" class="admin-section">
+            <h1 style="margin-bottom: 20px;">Configurações Pix</h1>
+            <div class="form-card" style="max-width: 500px;">
+                <h3>Dados de Recebimento Pix</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-bottom: 20px;">
+                    Configure aqui as credenciais da conta Pix da loja.
+                </p>
+                <form id="formConfiguracoes" onsubmit="salvarConfiguracoes(event)">
+                    <div class="form-group">
+                        <label for="confPixKey">Chave Pix</label>
+                        <input type="text" id="confPixKey" class="form-control" placeholder="E-mail, CPF, CNPJ, Celular ou Aleatória" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confPixBeneficiario">Nome do Beneficiário</label>
+                        <input type="text" id="confPixBeneficiario" class="form-control" maxlength="25" placeholder="Nome titular da conta Pix" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confPixCidade">Cidade do Beneficiário</label>
+                        <input type="text" id="confPixCidade" class="form-control" maxlength="15" placeholder="Cidade cadastrada no banco" required>
+                    </div>
+                    <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 10px;">Salvar Configurações</button>
+                </form>
+            </div>
+        </section>
     </main>
 </div>
 
@@ -320,6 +349,7 @@
         if (id === 'pedidos') loadPedidos();
         if (id === 'produtos') loadProdutos();
         if (id === 'estoque') loadEstoqueSelect();
+        if (id === 'configuracoes') loadConfiguracoes();
     }
 
     async function loadDashboard() {
@@ -536,6 +566,44 @@
         });
         showToast('Estoque atualizado!');
         loadEstoqueSelect();
+    }
+
+    async function loadConfiguracoes() {
+        try {
+            const configs = await apiFetch('/api/config/admin');
+            
+            const pixKey = configs.find(c => c.chave === 'PixKey')?.valor || '';
+            const pixBeneficiario = configs.find(c => c.chave === 'PixBeneficiario')?.valor || '';
+            const pixCidade = configs.find(c => c.chave === 'PixCidade')?.valor || '';
+            
+            document.getElementById('confPixKey').value = pixKey;
+            document.getElementById('confPixBeneficiario').value = pixBeneficiario;
+            document.getElementById('confPixCidade').value = pixCidade;
+        } catch (err) {
+            console.error('Erro ao carregar configurações:', err);
+            showToast('Erro ao carregar configurações', true);
+        }
+    }
+
+    async function salvarConfiguracoes(e) {
+        e.preventDefault();
+        try {
+            const data = [
+                { chave: 'PixKey', valor: document.getElementById('confPixKey').value },
+                { chave: 'PixBeneficiario', valor: document.getElementById('confPixBeneficiario').value },
+                { chave: 'PixCidade', valor: document.getElementById('confPixCidade').value }
+            ];
+
+            await apiFetch('/api/config/admin', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+
+            showToast('Configurações salvas com sucesso!');
+        } catch (err) {
+            console.error('Erro ao salvar configurações:', err);
+            showToast('Erro ao salvar configurações', true);
+        }
     }
 
     function logout() {

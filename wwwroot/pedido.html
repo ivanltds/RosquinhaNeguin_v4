@@ -105,6 +105,87 @@
               </select>
             </div>
 
+            <!-- Detalhes do Pix -->
+            <div id="pagamento-pix" style="margin-bottom: 20px;">
+                <p style="font-size: 0.85rem; color: var(--color-text-sub);">Pague via Pix na próxima tela. O código Copia e Cola e o QR Code serão exibidos assim que você clicar em "Fazer Pedido".</p>
+            </div>
+
+            <!-- Detalhes do Cartão -->
+            <div id="pagamento-cartao" style="display: none; margin-bottom: 20px;">
+                <div class="form-group" id="saved-card-group">
+                    <label for="cartaoSalvo">Selecione um Cartão</label>
+                    <select id="cartaoSalvo" class="form-control" onchange="toggleCardType()"></select>
+                </div>
+                
+                <div id="novo-cartao-form" style="display: none;">
+                    <!-- Mockup 3D do Cartão -->
+                    <div class="card-container-3d">
+                        <div class="card-3d" id="cc-mockup">
+                            <!-- Frente -->
+                            <div class="card-face card-face-front">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div class="card-chip"></div>
+                                    <div class="card-brand" id="mockup-brand">Visa</div>
+                                </div>
+                                <div class="card-number-display" id="mockup-number">•••• •••• •••• ••••</div>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                                    <div class="card-holder-group">
+                                        <span class="card-holder-label">Titular</span>
+                                        <span class="card-holder-name" id="mockup-holder">NOME DO TITULAR</span>
+                                    </div>
+                                    <div class="card-expiry-group">
+                                        <span class="card-holder-label">Validade</span>
+                                        <span class="card-expiry-val" id="mockup-expiry">MM/AA</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Verso -->
+                            <div class="card-face card-face-back">
+                                <div class="card-magnetic-strip"></div>
+                                <div class="card-signature-panel">
+                                    <span id="mockup-cvv">•••</span>
+                                </div>
+                                <div class="card-back-note">
+                                    Rosquinha do Neguin - Para fins acadêmicos
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos do Formulário -->
+                    <div class="form-group">
+                        <label for="cardNumero">Número do Cartão</label>
+                        <input type="text" id="cardNumero" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19" oninput="updateMockupCardNumber(this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label for="cardNome">Nome do Titular</label>
+                        <input type="text" id="cardNome" class="form-control" placeholder="Como impresso no cartão" oninput="updateMockupHolder(this.value)">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label for="cardValidade">Validade</label>
+                            <input type="text" id="cardValidade" class="form-control" placeholder="MM/AA" maxlength="5" oninput="updateMockupExpiry(this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="cardCvv">CVV</label>
+                            <input type="password" id="cardCvv" class="form-control" placeholder="123" maxlength="4" onfocus="flipCard(true)" onblur="flipCard(false)" oninput="updateMockupCvv(this.value)">
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="salvarCartao" checked style="width: auto; cursor: pointer;">
+                        <label for="salvarCartao" style="margin-bottom: 0; cursor: pointer; font-size: 0.85rem;">Salvar cartão para futuras compras</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalhes do Dinheiro -->
+            <div id="pagamento-dinheiro" style="display: none; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label for="trocoDinheiro">Precisa de troco para quanto?</label>
+                    <input type="number" id="trocoDinheiro" class="form-control" placeholder="Deixe em branco se não precisar" step="0.01">
+                </div>
+            </div>
+
             <div id="totalPedido" style="margin: 20px 0; padding-top: 20px; border-top: 1px solid #eee; font-size: 1.5rem; font-weight: 800; text-align: right; color: var(--color-chocolate);">
                 Total: R$ 0,00
             </div>
@@ -127,6 +208,40 @@
       </div>
   </div>
 
+</div>
+
+<!-- PIX MODAL -->
+<div class="pix-modal-bg" id="pixModal" role="dialog" aria-labelledby="pixModalTitle">
+    <div class="pix-modal-card">
+        <h2 id="pixModalTitle" style="color: var(--color-chocolate); margin-bottom: 10px;">Pagamento com Pix</h2>
+        <p style="font-size: 0.85rem; color: var(--color-text-sub);">Escaneie o QR Code ou copie o código abaixo para pagar:</p>
+        
+        <img id="pixQrCode" src="" alt="QR Code Pix" class="pix-qrcode-img">
+        
+        <div class="pix-timer">
+            ⏱️ Expira em: <span id="pixTimerVal">10:00</span>
+        </div>
+
+        <div class="pix-copy-box">
+            <input type="text" id="pixCopiaColaCode" class="pix-copy-input" readonly>
+            <button onclick="copiarPixCode()" class="btn btn-gold btn-sm" style="margin: 0; white-space: nowrap;">Copiar</button>
+        </div>
+
+        <p style="font-size: 0.8rem; color: var(--color-text-sub); margin-bottom: 20px;">
+            Aguardando confirmação automática de pagamento...
+        </p>
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="confirmarPagamentoPixManualmente()" class="btn btn-gold" style="flex: 1;">Confirmar Já</button>
+            <button onclick="fecharPixModal()" class="btn btn-outline" style="flex: 1;">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- OVERLAY DE PROCESSAMENTO -->
+<div class="processing-overlay" id="loadingOverlay">
+    <div class="premium-spinner"></div>
+    <h3 style="color: var(--color-chocolate);" id="loadingText">Processando pagamento...</h3>
 </div>
 
 <!-- JS GLOBAL -->
@@ -208,10 +323,125 @@ async function changeQty(id, delta) {
   }
 }
 
+/* DADOS E METODOS DE PAGAMENTO */
+let userCards = [];
+let pixTimerInterval = null;
+let pixSimulateTimeout = null;
+let currentPixOrderId = null;
+
+function togglePagamentoSections(metodo) {
+    document.getElementById('pagamento-pix').style.display = (metodo === 'Pix') ? 'block' : 'none';
+    document.getElementById('pagamento-cartao').style.display = (metodo === 'Cartão') ? 'block' : 'none';
+    document.getElementById('pagamento-dinheiro').style.display = (metodo === 'Dinheiro') ? 'block' : 'none';
+    
+    if (metodo === 'Cartão') {
+        loadUserCards();
+    }
+}
+
+async function loadUserCards() {
+    try {
+        userCards = await apiFetch('/api/cartoes');
+        const select = document.getElementById('cartaoSalvo');
+        
+        if (userCards.length === 0) {
+            select.innerHTML = '<option value="novo">-- Cadastrar Novo Cartão --</option>';
+            document.getElementById('novo-cartao-form').style.display = 'block';
+        } else {
+            let options = userCards.map(c => `<option value="${c.id}">${c.bandeira} final ${c.numeroMascarado.slice(-4)} (${c.nomeTitular})</option>`).join('');
+            options += '<option value="novo">-- Usar Outro Cartão --</option>';
+            select.innerHTML = options;
+            toggleCardType();
+        }
+    } catch (err) {
+        console.error('Erro ao carregar cartões:', err);
+        const select = document.getElementById('cartaoSalvo');
+        select.innerHTML = '<option value="novo">-- Cadastrar Novo Cartão --</option>';
+        document.getElementById('novo-cartao-form').style.display = 'block';
+    }
+}
+
+function toggleCardType() {
+    const select = document.getElementById('cartaoSalvo');
+    const form = document.getElementById('novo-cartao-form');
+    if (select.value === 'novo') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+/* Mockup 3D do Cartão */
+function flipCard(flipped) {
+    const card = document.getElementById('cc-mockup');
+    if (flipped) {
+        card.classList.add('flipped');
+    } else {
+        card.classList.remove('flipped');
+    }
+}
+
+function updateMockupCardNumber(val) {
+    let cleaned = val.replace(/\D/g, '');
+    let formatted = '';
+    for (let i = 0; i < cleaned.length; i++) {
+        if (i > 0 && i % 4 === 0) formatted += ' ';
+        formatted += cleaned[i];
+    }
+    document.getElementById('cardNumero').value = formatted.substring(0, 19);
+    
+    let displayVal = formatted;
+    while (displayVal.length < 19) {
+        let idx = displayVal.length;
+        if (idx % 5 === 4) displayVal += ' ';
+        else displayVal += '•';
+    }
+    document.getElementById('mockup-number').textContent = displayVal;
+
+    const brand = detectBrand(cleaned);
+    document.getElementById('mockup-brand').textContent = brand;
+}
+
+function detectBrand(number) {
+    if (number.startsWith('4')) return "Visa";
+    if (number.startsWith("51") || number.startsWith("52") || number.startsWith("53") || number.startsWith("54") || number.startsWith("55") ||
+        (number.length >= 4 && parseInt(number.substring(0, 4)) >= 2221 && parseInt(number.substring(0, 4)) <= 2720))
+        return "Mastercard";
+    if (number.startsWith("34") || number.startsWith("37")) return "Amex";
+    if (number.startsWith("6011") || number.startsWith("622") || number.startsWith("64") || number.startsWith("65")) return "Discover";
+    if (number.startsWith("35") || number.startsWith("36") || number.startsWith("38")) return "Diners";
+    if (number.startsWith("5067") || number.startsWith("4576") || number.startsWith("4011")) return "Elo";
+    return "Outra";
+}
+
+function updateMockupHolder(val) {
+    document.getElementById('mockup-holder').textContent = val.toUpperCase() || 'NOME DO TITULAR';
+}
+
+function updateMockupExpiry(val) {
+    let cleaned = val.replace(/\D/g, '');
+    let formatted = cleaned;
+    if (cleaned.length > 2) {
+        formatted = cleaned.substring(0, 2) + '/' + cleaned.substring(2, 4);
+    }
+    document.getElementById('cardValidade').value = formatted;
+    document.getElementById('mockup-expiry').textContent = formatted || 'MM/AA';
+}
+
+function updateMockupCvv(val) {
+    let cleaned = val.replace(/\D/g, '');
+    document.getElementById('cardCvv').value = cleaned.substring(0, 4);
+    
+    let display = '';
+    for (let i = 0; i < cleaned.length; i++) display += '•';
+    document.getElementById('mockup-cvv').textContent = display || '•••';
+}
+
 /* FINALIZAR PEDIDO */
 async function finalizarPedido() {
   const items = Object.values(getCart());
   const user = JSON.parse(localStorage.getItem('user'));
+  if (!user) return;
   const nome = user.nome;
   const pagamento = document.getElementById('formaPagamento').value;
 
@@ -220,15 +450,78 @@ async function finalizarPedido() {
     return;
   }
 
+  let cartaoId = null;
+
+  if (pagamento === 'Cartão') {
+      const select = document.getElementById('cartaoSalvo');
+      if (select.value === 'novo') {
+          const numero = document.getElementById('cardNumero').value.replace(/\D/g, '');
+          const nomeTitular = document.getElementById('cardNome').value.trim();
+          const validade = document.getElementById('cardValidade').value.trim();
+          const cvv = document.getElementById('cardCvv').value.trim();
+
+          if (numero.length < 13 || numero.length > 19) {
+              showToast('Por favor, informe um número de cartão válido.', 'warning');
+              document.getElementById('cardNumero').focus();
+              return;
+          }
+          if (!nomeTitular) {
+              showToast('Informe o nome do titular impresso no cartão.', 'warning');
+              document.getElementById('cardNome').focus();
+              return;
+          }
+          if (validade.length < 5 || !validade.includes('/')) {
+              showToast('Informe a validade no formato MM/AA.', 'warning');
+              document.getElementById('cardValidade').focus();
+              return;
+          }
+          if (cvv.length < 3) {
+              showToast('Informe o código de segurança (CVV).', 'warning');
+              document.getElementById('cardCvv').focus();
+              return;
+          }
+
+          mostrarOverlayProcessamento("Validando cartão...");
+
+          try {
+              const cardRes = await apiFetch('/api/cartoes', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                      numero: numero,
+                      nomeTitular: nomeTitular,
+                      validade: validade
+                  })
+              });
+              cartaoId = cardRes.id;
+          } catch (err) {
+              ocultarOverlayProcessamento();
+              showToast('Erro ao processar cartão: ' + err.message, 'error');
+              return;
+          }
+      } else {
+          cartaoId = parseInt(select.value);
+      }
+  }
+
   const btn = document.getElementById('btnFinalizar');
   btn.disabled = true;
   btn.textContent = 'Processando...';
 
   try {
-    // 1. Enviar para a API (Backend)
+    let obs = `Pagamento: ${pagamento}`;
+    if (pagamento === 'Dinheiro') {
+        const troco = document.getElementById('trocoDinheiro').value;
+        if (troco) {
+            obs += ` | Precisa de troco para R$ ${parseFloat(troco).toFixed(2)}`;
+        }
+    }
+    obs += ` | Via Site`;
+
     const pedidoApi = {
         nomeCliente: nome,
-        observacao: `Pagamento: ${pagamento} | Via Site`,
+        observacao: obs,
+        metodoPagamento: pagamento,
+        cartaoId: cartaoId,
         itens: items.map(i => ({ produtoId: i.id, quantidade: i.qty }))
     };
 
@@ -237,35 +530,166 @@ async function finalizarPedido() {
       body: JSON.stringify(pedidoApi)
     });
 
-    // 2. Preparar Mensagem de WhatsApp (para o botão da tela de sucesso)
-    let msg = `*Dúvida sobre o Pedido - ${CONFIG.nomeLoja}*\n`;
-    msg += `-------------------------------\n`;
-    msg += `🆔 *Pedido:* #${res.id}\n`;
-    msg += `👤 *Cliente:* ${nome}\n`;
-    msg += `-------------------------------\n`;
-    msg += `Estou com uma dúvida sobre meu pedido realizado agora no site.`;
-
-    const whatsUrl = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`;
-    
-    // 3. Configurar botão de WhatsApp na tela de sucesso
-    const btnWhats = document.getElementById('btnWhatsSucesso');
-    btnWhats.onclick = () => window.open(whatsUrl, '_blank');
-
-    // 4. Mostrar Tela de Sucesso
-    document.getElementById('displayOrderId').textContent = `#${res.id}`;
-    document.getElementById('cartView').style.display = 'none';
-    document.getElementById('successView').style.display = 'block';
-
-    // 5. Limpar carrinho
-    clearCart();
-    updateCartBadge();
+    if (pagamento === 'Pix') {
+        abrirPixModal(res.id, res.pixCopiaECola);
+        btn.disabled = false;
+        btn.textContent = 'Fazer Pedido 🚀';
+    } else if (pagamento === 'Cartão') {
+        mostrarOverlayProcessamento("Autorizando com a operadora...");
+        
+        setTimeout(async () => {
+            try {
+                const simula = await apiFetch(`/api/pedidos/${res.id}/simular-pagamento`, {
+                    method: 'POST'
+                });
+                ocultarOverlayProcessamento();
+                exibirSucessoPedido(res.id);
+            } catch (err) {
+                ocultarOverlayProcessamento();
+                showToast("Erro ao autorizar pagamento: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Fazer Pedido 🚀';
+            }
+        }, 2000);
+    } else {
+        exibirSucessoPedido(res.id);
+        btn.disabled = false;
+        btn.textContent = 'Fazer Pedido 🚀';
+    }
 
   } catch (e) {
+    ocultarOverlayProcessamento();
     console.error(e);
     showToast('Erro ao salvar pedido: ' + e.message, 'error');
     btn.disabled = false;
     btn.textContent = 'Fazer Pedido 🚀';
   }
+}
+
+/* Pix Modal timer and confirmation handlers */
+function abrirPixModal(orderId, copiaECola) {
+    currentPixOrderId = orderId;
+    document.getElementById('pixCopiaColaCode').value = copiaECola;
+    
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(copiaECola)}`;
+    document.getElementById('pixQrCode').src = qrCodeUrl;
+    
+    let timeRemaining = 10 * 60;
+    const timerDisplay = document.getElementById('pixTimerVal');
+    timerDisplay.textContent = "10:00";
+    
+    clearInterval(pixTimerInterval);
+    pixTimerInterval = setInterval(() => {
+        timeRemaining--;
+        if (timeRemaining <= 0) {
+            clearInterval(pixTimerInterval);
+            timerDisplay.textContent = "Expirado";
+            fecharPixModal();
+            showToast("O tempo do Pix expirou. O pedido continuará pendente no seu painel.", "warning");
+        } else {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+    }, 1000);
+    
+    document.getElementById('pixModal').classList.add('active');
+    
+    clearTimeout(pixSimulateTimeout);
+    pixSimulateTimeout = setTimeout(async () => {
+        await simularConfirmacaoPixSilenciosa(orderId);
+    }, 8000);
+}
+
+function fecharPixModal() {
+    clearInterval(pixTimerInterval);
+    clearTimeout(pixSimulateTimeout);
+    document.getElementById('pixModal').classList.remove('active');
+    window.location.href = '/meus-pedidos.html';
+}
+
+async function simularConfirmacaoPixSilenciosa(orderId) {
+    try {
+        const res = await apiFetch(`/api/pedidos/${orderId}/simular-pagamento`, {
+            method: 'POST'
+        });
+        
+        if (res.status === 'confirmado') {
+            clearInterval(pixTimerInterval);
+            document.getElementById('pixModal').classList.remove('active');
+            exibirSucessoPedido(orderId);
+        }
+    } catch (err) {
+        console.error("Erro ao simular pagamento silencioso:", err);
+    }
+}
+
+async function confirmarPagamentoPixManualmente() {
+    if (!currentPixOrderId) return;
+    
+    mostrarOverlayProcessamento("Confirmando pagamento Pix...");
+    
+    try {
+        const res = await apiFetch(`/api/pedidos/${currentPixOrderId}/simular-pagamento`, {
+            method: 'POST'
+        });
+        
+        ocultarOverlayProcessamento();
+        
+        if (res.status === 'confirmado') {
+            clearInterval(pixTimerInterval);
+            clearTimeout(pixSimulateTimeout);
+            document.getElementById('pixModal').classList.remove('active');
+            exibirSucessoPedido(currentPixOrderId);
+        } else {
+            showToast("Pagamento ainda não detectado. Tente novamente.", "warning");
+        }
+    } catch (err) {
+        ocultarOverlayProcessamento();
+        console.error(err);
+        showToast("Erro ao confirmar pagamento Pix: " + err.message, "error");
+    }
+}
+
+function copiarPixCode() {
+    const copyText = document.getElementById('pixCopiaColaCode');
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    showToast("Código Copia e Cola copiado!", "success");
+}
+
+function mostrarOverlayProcessamento(texto) {
+    document.getElementById('loadingText').textContent = texto || "Processando pagamento...";
+    document.getElementById('loadingOverlay').classList.add('active');
+}
+
+function ocultarOverlayProcessamento() {
+    document.getElementById('loadingOverlay').classList.remove('active');
+}
+
+function exibirSucessoPedido(orderId) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const nome = user ? user.nome : "Cliente";
+    
+    let msg = `*Pedido Confirmado - ${CONFIG.nomeLoja}*\n`;
+    msg += `-------------------------------\n`;
+    msg += `🆔 *Pedido:* #${orderId}\n`;
+    msg += `👤 *Cliente:* ${nome}\n`;
+    msg += `-------------------------------\n`;
+    msg += `Meu pedido foi pago e confirmado. Gostaria de acompanhar o preparo!`;
+
+    const whatsUrl = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`;
+    const btnWhats = document.getElementById('btnWhatsSucesso');
+    btnWhats.onclick = () => window.open(whatsUrl, '_blank');
+
+    document.getElementById('displayOrderId').textContent = `#${orderId}`;
+    document.getElementById('cartView').style.display = 'none';
+    document.getElementById('successView').style.display = 'block';
+
+    clearCart();
+    updateCartBadge();
 }
 
 /* inicialização */
@@ -286,6 +710,13 @@ function checkAuth() {
     loggedOutFinalize.style.display = 'none';
     
     userNameDisplay.textContent = user.nome;
+    
+    // Configura eventos de alteração de método
+    document.getElementById('formaPagamento').addEventListener('change', function() {
+        togglePagamentoSections(this.value);
+    });
+    
+    togglePagamentoSections(document.getElementById('formaPagamento').value);
     return true;
 }
 
