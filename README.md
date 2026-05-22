@@ -37,8 +37,14 @@ O projeto está pronto para rodar em containers, facilitando a configuração do
 
 ### ✅ Pré-requisitos
 1. **.NET 8 SDK** instalado.
+```bash
+curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir "$HOME/.dotnet"
+```
 2. **SQL Server** local ou via Docker (porta 1433).
-3. Ferramenta EF Core: `dotnet tool install --global dotnet-ef`
+3. Ferramenta EF Core: 
+```bash
+dotnet tool install --global dotnet-ef
+```
 
 ### 📂 Passo 1 — Configurar o Banco de Dados
 Se você estiver usando um SQL Server diferente do Docker, ajuste a `ConnectionStrings` no arquivo `appsettings.json`.
