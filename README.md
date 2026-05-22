@@ -64,6 +64,11 @@ dotnet ef database update
 ### ▶️ Passo 3 — Rodar o Projeto
 ```bash
 dotnet run
+
+se tiver com a porta ocupada rodar 
+
+dotnet run -- --urls "http://localhost:5005"
+
 ```
 
 ---
