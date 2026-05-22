@@ -51,6 +51,11 @@ Se você estiver usando um SQL Server diferente do Docker, ajuste a `ConnectionS
 
 ### 💻 Passo 2 — Aplicar Migrations
 Abra o terminal na pasta do projeto e execute:
+
+   ```bash
+   docker-compose up -d --build
+   ```
+**Atualizaer o banco:**
 ```bash
 dotnet ef database update
 ```
