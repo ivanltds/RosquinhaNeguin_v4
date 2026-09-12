@@ -24,7 +24,7 @@ public class ReportsController(AppDbContext db) : ControllerBase
 
             var pedidosHoje = pedidosHojeList.Count;
             var faturamentoHoje = pedidosHojeList
-                .Where(p => p.Status != "cancelado")
+                .Where(p => p.Status != "cancelado" && p.Status != "reembolsado")
                 .Sum(p => p.Total);
 
             var estoqueCritico = await db.Produtos
@@ -63,7 +63,7 @@ public class ReportsController(AppDbContext db) : ControllerBase
         try
         {
             var pedidos = await db.Pedidos
-                .Where(p => p.Status != "cancelado")
+                .Where(p => p.Status != "cancelado" && p.Status != "reembolsado")
                 .ToListAsync();
 
             var clientes = pedidos

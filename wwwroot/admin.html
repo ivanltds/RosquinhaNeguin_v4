@@ -245,6 +245,8 @@
         .status-entregue { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
         .status-cancelado { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
         .status-confirmado { background: #efebe9; color: #4e342e; border: 1px solid #d7ccc8; }
+        .status-reembolso_solicitado { background: #fff3e0; color: #d84315; border: 1px solid #ffab91; font-weight: 800; animation: pulseAtrasado 1.8s infinite ease-in-out; }
+        .status-reembolsado { background: #f3e5f5; color: #7b1fa2; border: 1px solid #ce93d8; font-weight: 800; }
         .status-atrasado {
             background: #ffebee;
             color: #c62828;
@@ -491,11 +493,14 @@
         <section id="section-pedidos" class="admin-section">
             <div class="section-header">
                 <h1>Gestão de Pedidos</h1>
-                <select id="filterStatus" class="form-control" style="width: auto; min-width: 180px;" onchange="loadPedidos()">
+                <select id="filterStatus" class="form-control" style="width: auto; min-width: 200px;" onchange="loadPedidos()">
                     <option value="">Todos os Status</option>
+                    <option value="reembolso_solicitado">🚨 Reembolso Solicitado</option>
                     <option value="pendente">Pendente</option>
+                    <option value="confirmado">Confirmado</option>
                     <option value="preparo">Em Preparo</option>
                     <option value="entregue">Entregue</option>
+                    <option value="reembolsado">💰 Reembolsado</option>
                     <option value="cancelado">Cancelado</option>
                 </select>
             </div>
@@ -798,9 +803,13 @@
                 const prepMin = storeTempoPreparoMinutos || 45;
                 list.innerHTML = data.ultimosPedidos.map(p => {
                     const elapsedMin = Math.floor((new Date() - new Date(p.criadoEm)) / 60000);
-                    const isDelayed = (p.status !== 'entregue' && p.status !== 'cancelado') && (elapsedMin > prepMin);
+                    const isDelayed = (p.status !== 'entregue' && p.status !== 'cancelado' && p.status !== 'reembolsado') && (elapsedMin > prepMin);
                     const delayBadge = isDelayed ? `<span class="status-badge status-atrasado" style="margin-left: 4px; font-size: 0.7rem;">⚠️ +${elapsedMin - prepMin}m</span>` : '';
                     
+                    let badgeLabel = p.status;
+                    if (p.status === 'reembolso_solicitado') badgeLabel = '🚨 Reembolso';
+                    if (p.status === 'reembolsado') badgeLabel = '💰 Reembolsado';
+
                     return `
                     <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                         <div>
@@ -808,7 +817,7 @@
                             <br><small style="color: var(--color-text-sub);">${p.nomeCliente || 'Cliente'}</small>
                         </div>
                         <div>
-                            <span class="status-badge status-${p.status}">${p.status}</span>
+                            <span class="status-badge status-${p.status}">${badgeLabel}</span>
                             ${delayBadge}
                         </div>
                     </div>
@@ -888,26 +897,51 @@
             
             tbody.innerHTML = pedidos.map(p => {
                 const elapsedMin = Math.floor((new Date() - new Date(p.criadoEm)) / 60000);
-                const isDelayed = (p.status !== 'entregue' && p.status !== 'cancelado') && (elapsedMin > prepMin);
+                const isDelayed = (p.status !== 'entregue' && p.status !== 'cancelado' && p.status !== 'reembolsado') && (elapsedMin > prepMin);
                 const delayHtml = isDelayed 
                     ? `<div style="margin-top: 4px;"><span class="status-badge status-atrasado" title="Tempo excedido em ${elapsedMin - prepMin} min">⚠️ Atrasado (+${elapsedMin - prepMin} min)</span></div>`
                     : '';
 
+                let statusBadgeLabel = p.status;
+                if (p.status === 'reembolso_solicitado') statusBadgeLabel = '🚨 Reembolso Solicitado';
+                if (p.status === 'reembolsado') statusBadgeLabel = '💰 Reembolsado';
+
+                let obsHtml = '';
+                if (p.observacao) {
+                    obsHtml = `<br><small style="color: #d84315; font-size: 0.78rem;">📝 ${p.observacao}</small>`;
+                }
+
+                let quickActions = '';
+                if (p.status === 'reembolso_solicitado') {
+                    quickActions = `
+                        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                            <button class="btn btn-sm" style="background: #2e7d32; color: white; border: none; font-size: 0.75rem; padding: 4px 8px;" onclick="updateStatus(${p.id}, 'entregue')" title="Marcar como entregue e continuar fluxo normal">🚚 Entregar</button>
+                            <button class="btn btn-sm" style="background: #7b1fa2; color: white; border: none; font-size: 0.75rem; padding: 4px 8px;" onclick="updateStatus(${p.id}, 'reembolsado')" title="Aprovar reembolso e cancelar pedido">💰 Aprovar Reembolso</button>
+                        </div>
+                    `;
+                }
+
                 return `
-                <tr class="${isDelayed ? 'table-warning-row' : ''}">
+                <tr class="${isDelayed || p.status === 'reembolso_solicitado' ? 'table-warning-row' : ''}">
                     <td style="font-weight: 700;">#${p.id}</td>
-                    <td>${p.nomeCliente || '-'}</td>
+                    <td>
+                        <span style="font-weight: 600;">${p.nomeCliente || '-'}</span>
+                        ${obsHtml}
+                    </td>
                     <td>${new Date(p.criadoEm).toLocaleDateString()} ${new Date(p.criadoEm).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
                     <td style="font-weight: 700; color: #2e7d32;">R$ ${p.total.toFixed(2)}</td>
                     <td>
-                        <span class="status-badge status-${p.status}">${p.status}</span>
+                        <span class="status-badge status-${p.status}">${statusBadgeLabel}</span>
                         ${delayHtml}
                     </td>
                     <td>
-                        <select onchange="updateStatus(${p.id}, this.value)" class="form-control btn-sm">
+                        ${quickActions}
+                        <select onchange="updateStatus(${p.id}, this.value)" class="form-control btn-sm" style="min-width: 140px;">
                             <option value="pendente" ${p.status=='pendente'?'selected':''}>Pendente</option>
                             <option value="confirmado" ${p.status=='confirmado'?'selected':''}>Confirmado</option>
                             <option value="preparo" ${p.status=='preparo'?'selected':''}>Preparo</option>
+                            <option value="reembolso_solicitado" ${p.status=='reembolso_solicitado'?'selected':''}>Reembolso Solicitado</option>
+                            <option value="reembolsado" ${p.status=='reembolsado'?'selected':''}>Reembolsado</option>
                             <option value="entregue" ${p.status=='entregue'?'selected':''}>Entregue</option>
                             <option value="cancelado" ${p.status=='cancelado'?'selected':''}>Cancelado</option>
                         </select>

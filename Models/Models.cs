@@ -148,5 +148,6 @@ public record ResultadoCupomDto(bool Valido, string Mensagem, decimal DescontoCa
 public record ClienteReportDto(string Nome, string Telefone, int TotalPedidos, decimal TotalGasto, DateTime UltimoPedido);
 public record CalcularFreteDto(string Cep);
 public record ResultadoFreteDto(bool Atende, string Mensagem, decimal ValorFrete, double DistanciaKm, string? Logradouro, string? Bairro, string? Cidade, string? Estado);
+public record SolicitarReembolsoDto(string? Motivo);
 
 

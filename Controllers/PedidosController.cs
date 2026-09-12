@@ -11,7 +11,7 @@ namespace RosquinhaNeguin.Controllers;
 [Authorize]
 public class PedidosController(AppDbContext db) : ControllerBase
 {
-    static readonly string[] StatusValidos = ["pendente", "confirmado", "preparo", "entregue", "cancelado"];
+    static readonly string[] StatusValidos = ["pendente", "confirmado", "preparo", "reembolso_solicitado", "reembolsado", "entregue", "cancelado"];
 
     [HttpGet]
     [Authorize(Roles = "Admin")]
@@ -53,6 +53,58 @@ public class PedidosController(AppDbContext db) : ControllerBase
             Console.WriteLine(ex.StackTrace);
             return StatusCode(500, new { erro = "Erro interno ao buscar pedidos", detalhe = ex.Message });
         }
+    }
+
+    [HttpPost("{id:int}/solicitar-reembolso")]
+    public async Task<IActionResult> SolicitarReembolso(int id, [FromBody] SolicitarReembolsoDto? dto)
+    {
+        var pedido = await db.Pedidos.Include(p => p.Itens).FirstOrDefaultAsync(p => p.Id == id);
+        if (pedido is null) return NotFound(new { erro = "Pedido não encontrado." });
+
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr)) return Unauthorized(new { erro = "Usuário não autenticado." });
+        int userId = int.Parse(userIdStr);
+        var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+        // Apenas o cliente proprietário do pedido ou Admin pode solicitar
+        if (pedido.UsuarioId != userId && userRole != "Admin")
+        {
+            return Forbid();
+        }
+
+        if (pedido.Status == "entregue")
+        {
+            return BadRequest(new { erro = "Não é possível solicitar reembolso para um pedido já entregue." });
+        }
+
+        if (pedido.Status == "cancelado" || pedido.Status == "reembolsado")
+        {
+            return BadRequest(new { erro = "Este pedido já se encontra cancelado/reembolsado." });
+        }
+
+        if (pedido.Status == "reembolso_solicitado")
+        {
+            return BadRequest(new { erro = "A solicitação de reembolso deste pedido já está em análise." });
+        }
+
+        // Verificar tempo estimado de preparo
+        var prepMinStr = (await db.Configuracoes.FirstOrDefaultAsync(c => c.Chave == "TempoPreparoMinutos"))?.Valor ?? "45";
+        int prepMin = int.TryParse(prepMinStr, out var m) ? m : 45;
+
+        var elapsedMinutes = (DateTime.UtcNow - pedido.CriadoEm).TotalMinutes;
+        if (elapsedMinutes < prepMin && userRole != "Admin")
+        {
+            return BadRequest(new { erro = $"O pedido ainda está no prazo estimado ({prepMin} min). A solicitação de reembolso por atraso fica disponível após este período." });
+        }
+
+        pedido.Status = "reembolso_solicitado";
+        var motivoStr = !string.IsNullOrWhiteSpace(dto?.Motivo) ? dto.Motivo.Trim() : "Atraso no tempo de preparo";
+        pedido.Observacao = string.IsNullOrWhiteSpace(pedido.Observacao)
+            ? $"[Reembolso Solicitado: {motivoStr}]"
+            : $"{pedido.Observacao} | [Reembolso Solicitado: {motivoStr}]";
+
+        await db.SaveChangesAsync();
+        return Ok(new { mensagem = "Solicitação de reembolso registrada com sucesso! A loja foi notificada.", pedido });
     }
 
     [HttpPost]
@@ -236,10 +288,33 @@ public class PedidosController(AppDbContext db) : ControllerBase
         if (!StatusValidos.Contains(dto.Status))
             return BadRequest(new { erro = $"Status inválido." });
 
-        var pedido = await db.Pedidos.FindAsync(id);
+        var pedido = await db.Pedidos.Include(p => p.Itens).FirstOrDefaultAsync(p => p.Id == id);
         if (pedido is null) return NotFound(new { erro = "Pedido não encontrado." });
 
+        var statusAnterior = pedido.Status;
         pedido.Status = dto.Status;
+
+        // Se o admin aprovou o reembolso ou cancelou o pedido, devolve o estoque dos itens
+        if ((dto.Status == "reembolsado" || dto.Status == "cancelado") &&
+            (statusAnterior != "cancelado" && statusAnterior != "reembolsado"))
+        {
+            foreach (var item in pedido.Itens)
+            {
+                var produto = await db.Produtos.FindAsync(item.ProdutoId);
+                if (produto != null)
+                {
+                    produto.Estoque += item.Quantidade;
+                    db.MovimentacoesEstoque.Add(new MovimentacaoEstoque
+                    {
+                        ProdutoId = produto.Id,
+                        Quantidade = item.Quantidade,
+                        Tipo = "Entrada",
+                        Data = DateTime.UtcNow
+                    });
+                }
+            }
+        }
+
         await db.SaveChangesAsync();
         return Ok(pedido);
     }

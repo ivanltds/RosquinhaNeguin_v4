@@ -73,6 +73,8 @@
     .status-entregue { background: #e8f5e9; color: #2e7d32; }
     .status-cancelado { background: #ffebee; color: #c62828; }
     .status-confirmado { background: #efebe9; color: #4e342e; }
+    .status-reembolso_solicitado { background: #fff3e0; color: #d84315; border: 1px solid #ffab91; }
+    .status-reembolsado { background: #f3e5f5; color: #7b1fa2; border: 1px solid #ce93d8; }
     .status-atrasado {
         background: #ffebee;
         color: #c62828;
@@ -171,19 +173,39 @@
             }
 
             container.innerHTML = orders.map(order => {
-                const isActive = ['pendente', 'preparo', 'confirmado'].includes(order.status);
+                const isActive = ['pendente', 'preparo', 'confirmado', 'reembolso_solicitado'].includes(order.status);
                 const elapsedMin = Math.floor((new Date() - new Date(order.criadoEm)) / 60000);
-                const isDelayed = (order.status !== 'entregue' && order.status !== 'cancelado') && (elapsedMin > tempoPreparoMinutos);
+                const isDelayed = (order.status !== 'entregue' && order.status !== 'cancelado' && order.status !== 'reembolsado') && (elapsedMin > tempoPreparoMinutos);
 
-                const delayBadge = isDelayed 
-                    ? `<span class="status-badge status-atrasado" style="margin-left: 6px;">⚠️ Atrasado (+${elapsedMin - tempoPreparoMinutos} min)</span>` 
-                    : '';
+                let statusBadgeText = order.status;
+                if (order.status === 'reembolso_solicitado') statusBadgeText = 'Reembolso Solicitado';
+                if (order.status === 'reembolsado') statusBadgeText = 'Reembolsado';
 
-                const delayBanner = isDelayed
-                    ? `<div class="delay-notice">
-                        ⏱️ <strong>Tempo de preparo estendido:</strong> Este pedido ultrapassou a estimativa inicial de ${tempoPreparoMinutos} min. Nossa equipe já está finalizando seu pedido com prioridade total!
-                       </div>`
-                    : '';
+                let delayBadge = '';
+                let delayBanner = '';
+
+                if (order.status === 'reembolso_solicitado') {
+                    delayBanner = `
+                        <div class="delay-notice" style="background:#fff3e0; border-left:4px solid #e65100; color:#bf360c;">
+                            🔔 <strong>Reembolso em Análise:</strong> Você solicitou o cancelamento e reembolso deste pedido por atraso. A loja está processando sua solicitação.
+                        </div>`;
+                } else if (order.status === 'reembolsado') {
+                    delayBanner = `
+                        <div class="delay-notice" style="background:#f3e5f5; border-left:4px solid #7b1fa2; color:#4a148c;">
+                            ✅ <strong>Reembolso Aprovado:</strong> O pedido foi cancelado e o reembolso foi aprovado pela loja.
+                        </div>`;
+                } else if (isDelayed) {
+                    delayBadge = `<span class="status-badge status-atrasado" style="margin-left: 6px;">⚠️ Atrasado (+${elapsedMin - tempoPreparoMinutos} min)</span>`;
+                    delayBanner = `
+                        <div class="delay-notice" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                ⏱️ <strong>Tempo estendido:</strong> Este pedido ultrapassou a estimativa inicial de ${tempoPreparoMinutos} min.
+                            </div>
+                            <button class="btn btn-sm" style="background: #d32f2f; color: white; border: none; font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; cursor: pointer;" onclick="solicitarReembolso(${order.id})">
+                                💸 Solicitar Reembolso
+                            </button>
+                        </div>`;
+                }
 
                 return `
                     <div class="order-card ${isActive ? 'active' : ''}">
@@ -193,7 +215,7 @@
                                 <div class="order-date">${new Date(order.criadoEm).toLocaleString()}</div>
                             </div>
                             <div>
-                                <span class="status-badge status-${order.status}">${order.status}</span>
+                                <span class="status-badge status-${order.status}">${statusBadgeText}</span>
                                 ${delayBadge}
                             </div>
                         </div>
@@ -241,6 +263,22 @@
                     </div>
                 `;
             }
+        }
+    }
+
+    async function solicitarReembolso(id) {
+        const motivo = prompt('Por favor, confirme o motivo da solicitação de reembolso:', 'Atraso no tempo estimado de preparo/entrega');
+        if (motivo === null) return; // Cancelou
+
+        try {
+            const res = await apiFetch(`/api/pedidos/${id}/solicitar-reembolso`, {
+                method: 'POST',
+                body: JSON.stringify({ motivo })
+            });
+            showToast(res.mensagem || 'Solicitação de reembolso enviada com sucesso!', 'success');
+            loadOrders();
+        } catch (err) {
+            showToast(err.message || 'Erro ao solicitar reembolso', 'danger');
         }
     }
 
