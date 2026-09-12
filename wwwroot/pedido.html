@@ -2,10 +2,16 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <!-- Título da página -->
 <title>Meu Pedido | Rosquinha do Neguin</title>
+<meta name="theme-color" content="#4A2C11">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rosquinha">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/img/logo-circle.png">
 
 <!-- Ícone -->
 <link rel="icon" href="/favicon.ico">
@@ -105,6 +111,52 @@
               </select>
             </div>
 
+            <!-- CEP e Endereço de Entrega -->
+            <div style="background: #fffdf9; padding: 15px; border-radius: 10px; border: 1px solid #f0e4d4; margin-bottom: 20px;">
+                <h3 style="font-size: 1rem; color: var(--color-chocolate); margin-bottom: 12px;">📍 Endereço de Entrega</h3>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; font-weight: 600;">CEP</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="deliveryCep" class="form-control" placeholder="00000-000" maxlength="9" onblur="buscarCep()" style="flex: 1;">
+                        <button type="button" onclick="buscarCep()" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; white-space: nowrap;">Buscar CEP 🔍</button>
+                    </div>
+                    <small id="cepStatus" style="font-size: 0.8rem; display: block; margin-top: 4px; color: var(--color-text-sub);"></small>
+                </div>
+
+                <div id="enderecoFields" style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: 600;">Rua / Logradouro</label>
+                        <input type="text" id="deliveryRua" class="form-control" placeholder="Rua...">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: 600;">Número</label>
+                        <input type="text" id="deliveryNumero" class="form-control" placeholder="123">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: 600;">Bairro</label>
+                        <input type="text" id="deliveryBairro" class="form-control" placeholder="Bairro">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: 600;">Cidade / UF</label>
+                        <input type="text" id="deliveryCidadeUf" class="form-control" placeholder="São Paulo / SP">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; margin-bottom: 4px; font-size: 0.8rem; font-weight: 600;">Complemento (opcional)</label>
+                        <input type="text" id="deliveryComplemento" class="form-control" placeholder="Apto, Bloco, ponto de referência">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cupom de Desconto -->
+            <div style="background: #fdfaf5; padding: 15px; border-radius: 10px; border: 1px dashed var(--color-dourado); margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 700; color: var(--color-chocolate);">🎟️ Cupom de Desconto</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="cupomInput" class="form-control" placeholder="Ex: NEGUIN10" style="text-transform: uppercase;">
+                    <button type="button" onclick="aplicarCupom()" class="btn btn-gold" style="padding: 6px 15px; font-size: 0.9rem; white-space: nowrap;">Aplicar</button>
+                </div>
+                <small id="cupomStatus" style="font-size: 0.85rem; display: block; margin-top: 6px; font-weight: 600;"></small>
+            </div>
+
             <!-- Detalhes do Pix -->
             <div id="pagamento-pix" style="margin-bottom: 20px;">
                 <p style="font-size: 0.85rem; color: var(--color-text-sub);">Pague via Pix na próxima tela. O código Copia e Cola e o QR Code serão exibidos assim que você clicar em "Fazer Pedido".</p>
@@ -186,8 +238,24 @@
                 </div>
             </div>
 
-            <div id="totalPedido" style="margin: 20px 0; padding-top: 20px; border-top: 1px solid #eee; font-size: 1.5rem; font-weight: 800; text-align: right; color: var(--color-chocolate);">
-                Total: R$ 0,00
+            <!-- RESUMO DETALHADO DOS VALORES -->
+            <div id="resumoValores" style="margin: 20px 0; padding-top: 15px; border-top: 1px solid #eee; font-size: 0.95rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: var(--color-text-sub);">Subtotal:</span>
+                    <strong id="subtotalVal">R$ 0,00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: var(--color-text-sub);">Taxa de Entrega:</span>
+                    <strong id="freteVal">R$ 0,00</strong>
+                </div>
+                <div id="rowDesconto" style="display: none; justify-content: space-between; margin-bottom: 6px; color: #2e7d32;">
+                    <span>Desconto (<span id="cupomTag"></span>):</span>
+                    <strong id="descontoVal">- R$ 0,00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 2px dashed #eee; font-size: 1.5rem; font-weight: 800; color: var(--color-chocolate);">
+                    <span>Total:</span>
+                    <span id="totalPedidoVal">R$ 0,00</span>
+                </div>
             </div>
 
         <button onclick="finalizarPedido()" id="btnFinalizar" class="btn btn-gold" style="width: 100%; font-size: 1.2rem;">
@@ -206,6 +274,7 @@
             <a href="/login.html?redirect=/pedido.html" class="btn btn-gold" style="width: 100%;">Entrar e Finalizar</a>
         </div>
       </div>
+
   </div>
 
 </div>
@@ -255,6 +324,10 @@
 
 <script>
 
+let taxaEntrega = 0;
+let descontoCalculado = 0;
+let cupomCodigoAplicado = null;
+
 /* renderiza carrinho */
 function renderCart() {
   const cart = getCart();
@@ -267,8 +340,7 @@ function renderCart() {
         <p>Seu carrinho está vazio.</p>
         <a href="/cardapio.html" class="btn btn-outline" style="margin-top:20px;">Voltar ao Cardápio</a>
     </div>`;
-    if (document.getElementById('totalPedido')) document.getElementById('totalPedido').textContent = 'Total: R$ 0,00';
-    if (document.getElementById('totalPedidoGuest')) document.getElementById('totalPedidoGuest').textContent = 'Total: R$ 0,00';
+    recalcularTotais();
     return;
   }
 
@@ -290,9 +362,125 @@ function renderCart() {
     </div>
   `).join('');
 
-  const total = formatBRL(cartTotal());
-  if (document.getElementById('totalPedido')) document.getElementById('totalPedido').textContent = 'Total: ' + total;
-  if (document.getElementById('totalPedidoGuest')) document.getElementById('totalPedidoGuest').textContent = 'Total: ' + total;
+  recalcularTotais();
+}
+
+function recalcularTotais() {
+  const subtotal = cartTotal();
+  const totalFinal = Math.max(0, subtotal + taxaEntrega - descontoCalculado);
+
+  if (document.getElementById('subtotalVal')) document.getElementById('subtotalVal').textContent = formatBRL(subtotal);
+  if (document.getElementById('freteVal')) document.getElementById('freteVal').textContent = formatBRL(taxaEntrega);
+  if (document.getElementById('totalPedidoVal')) document.getElementById('totalPedidoVal').textContent = formatBRL(totalFinal);
+  if (document.getElementById('totalPedidoGuest')) document.getElementById('totalPedidoGuest').textContent = 'Total: ' + formatBRL(totalFinal);
+  
+  const rowDesc = document.getElementById('rowDesconto');
+  if (rowDesc) {
+    if (descontoCalculado > 0) {
+      rowDesc.style.display = 'flex';
+      document.getElementById('cupomTag').textContent = cupomCodigoAplicado || 'CUPOM';
+      document.getElementById('descontoVal').textContent = '- ' + formatBRL(descontoCalculado);
+    } else {
+      rowDesc.style.display = 'none';
+    }
+  }
+}
+
+let freteValido = true;
+
+async function buscarCep() {
+  const cepInput = document.getElementById('deliveryCep');
+  const statusElem = document.getElementById('cepStatus');
+  if (!cepInput) return;
+
+  const rawCep = cepInput.value.replace(/\D/g, '');
+  if (rawCep.length !== 8) {
+    if (rawCep.length > 0) {
+      statusElem.textContent = '❌ Por favor, digite um CEP válido com 8 dígitos.';
+      statusElem.style.color = '#d32f2f';
+    }
+    return;
+  }
+
+  statusElem.textContent = '⏳ Calculando distância da loja (Origem: 06250-250 / Osasco)...';
+  statusElem.style.color = 'var(--color-chocolate)';
+
+  try {
+    const res = await apiFetch('/api/frete/calcular/' + rawCep);
+
+    if (res.atende) {
+      freteValido = true;
+      taxaEntrega = res.valorFrete;
+      document.getElementById('deliveryRua').value = res.logradouro || '';
+      document.getElementById('deliveryBairro').value = res.bairro || '';
+      document.getElementById('deliveryCidadeUf').value = `${res.cidade || ''} / ${res.estado || ''}`;
+      document.getElementById('deliveryNumero').focus();
+
+      statusElem.textContent = `✅ ${res.mensagem} (Distância: ${res.distanciaKm} km | Frete: ${formatBRL(res.valorFrete)})`;
+      statusElem.style.color = '#2e7d32';
+    } else {
+      freteValido = false;
+      taxaEntrega = 0;
+      if (res.cidade) {
+        document.getElementById('deliveryRua').value = res.logradouro || '';
+        document.getElementById('deliveryBairro').value = res.bairro || '';
+        document.getElementById('deliveryCidadeUf').value = `${res.cidade || ''} / ${res.estado || ''}`;
+      }
+      statusElem.textContent = `❌ ${res.mensagem}`;
+      statusElem.style.color = '#d32f2f';
+      showToast(res.mensagem, 'warning');
+    }
+
+    recalcularTotais();
+  } catch (err) {
+    console.error('Erro ao calcular frete:', err);
+    statusElem.textContent = '⚠️ Erro ao consultar CEP. Tente novamente.';
+    statusElem.style.color = '#e65100';
+  }
+}
+
+
+async function aplicarCupom() {
+  const input = document.getElementById('cupomInput');
+  const status = document.getElementById('cupomStatus');
+  if (!input) return;
+
+  const codigo = input.value.trim().toUpperCase();
+  if (!codigo) {
+    status.textContent = 'Informe o código do cupom.';
+    status.style.color = '#d32f2f';
+    return;
+  }
+
+  const subtotal = cartTotal();
+  status.textContent = 'Validando cupom...';
+  status.style.color = 'var(--color-chocolate)';
+
+  try {
+    const res = await apiFetch('/api/cupons/validar', {
+      method: 'POST',
+      body: JSON.stringify({ codigo: codigo, subtotal: subtotal })
+    });
+
+    if (res.valido) {
+      descontoCalculado = res.descontoCalculado;
+      cupomCodigoAplicado = res.codigo;
+      status.textContent = `✅ ${res.mensagem} Desconto: ${formatBRL(res.descontoCalculado)}`;
+      status.style.color = '#2e7d32';
+      showToast('Cupom aplicado com sucesso!', 'success');
+    } else {
+      descontoCalculado = 0;
+      cupomCodigoAplicado = null;
+      status.textContent = `❌ ${res.mensagem}`;
+      status.style.color = '#d32f2f';
+      showToast(res.mensagem, 'warning');
+    }
+    recalcularTotais();
+  } catch (err) {
+    console.error('Erro ao validar cupom:', err);
+    status.textContent = 'Erro ao validar cupom.';
+    status.style.color = '#d32f2f';
+  }
 }
 
 /* altera quantidade */
@@ -450,6 +638,19 @@ async function finalizarPedido() {
     return;
   }
 
+  const cepVal = document.getElementById('deliveryCep')?.value.replace(/\D/g, '') || '';
+  if (!cepVal || cepVal.length !== 8) {
+    showToast('Por favor, informe um CEP válido com 8 dígitos para calcular a entrega.', 'warning');
+    document.getElementById('deliveryCep')?.focus();
+    return;
+  }
+
+  if (!freteValido) {
+    showToast('Entrega indisponível para o CEP informado. Verifique as restrições de distância (máx 10 km de Osasco).', 'error');
+    document.getElementById('deliveryCep')?.focus();
+    return;
+  }
+
   let cartaoId = null;
 
   if (pagamento === 'Cartão') {
@@ -517,11 +718,38 @@ async function finalizarPedido() {
     }
     obs += ` | Via Site`;
 
+    // Campos de Endereço
+    const cep = document.getElementById('deliveryCep')?.value || '';
+    const rua = document.getElementById('deliveryRua')?.value || '';
+    const numero = document.getElementById('deliveryNumero')?.value || '';
+    const complemento = document.getElementById('deliveryComplemento')?.value || '';
+    const bairro = document.getElementById('deliveryBairro')?.value || '';
+    const cidadeUf = document.getElementById('deliveryCidadeUf')?.value || '';
+    
+    let cidade = '';
+    let estado = '';
+    if (cidadeUf.includes('/')) {
+      const parts = cidadeUf.split('/');
+      cidade = parts[0].trim();
+      estado = parts[1].trim();
+    } else {
+      cidade = cidadeUf.trim();
+    }
+
     const pedidoApi = {
         nomeCliente: nome,
         observacao: obs,
         metodoPagamento: pagamento,
         cartaoId: cartaoId,
+        cep: cep,
+        logradouro: rua,
+        numero: numero,
+        complemento: complemento,
+        bairro: bairro,
+        cidade: cidade,
+        estado: estado,
+        taxaEntrega: taxaEntrega,
+        cupomCodigo: cupomCodigoAplicado,
         itens: items.map(i => ({ produtoId: i.id, quantidade: i.qty }))
     };
 
@@ -558,6 +786,7 @@ async function finalizarPedido() {
         btn.textContent = 'Fazer Pedido 🚀';
     }
 
+
   } catch (e) {
     ocultarOverlayProcessamento();
     console.error(e);
@@ -568,6 +797,7 @@ async function finalizarPedido() {
 }
 
 /* Pix Modal timer and confirmation handlers */
+
 function abrirPixModal(orderId, copiaECola) {
     currentPixOrderId = orderId;
     document.getElementById('pixCopiaColaCode').value = copiaECola;

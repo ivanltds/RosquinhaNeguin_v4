@@ -59,6 +59,17 @@ public class Pedido
     public string? NomeCliente { get; set; }
     public string? Telefone { get; set; }
     public string? Observacao { get; set; }
+    public string? Cep { get; set; }
+    public string? Logradouro { get; set; }
+    public string? Numero { get; set; }
+    public string? Complemento { get; set; }
+    public string? Bairro { get; set; }
+    public string? Cidade { get; set; }
+    public string? Estado { get; set; }
+    public decimal TaxaEntrega { get; set; } = 0;
+    public string? CupomCodigo { get; set; }
+    public decimal Desconto { get; set; } = 0;
+    public decimal Subtotal { get; set; } = 0;
     public decimal Total { get; set; }
     public string MetodoPagamento { get; set; } = "Dinheiro"; // Pix | Cartão | Dinheiro
     public int? CartaoId { get; set; }
@@ -99,10 +110,43 @@ public class Configuracao
     public string Valor { get; set; } = "";
 }
 
-public record CriarPedidoDto(string? NomeCliente, string? Telefone, string? Observacao, string? MetodoPagamento, int? CartaoId, List<ItemPedidoDto> Itens);
+public class Cupom
+{
+    public int Id { get; set; }
+    public string Codigo { get; set; } = "";
+    public string Tipo { get; set; } = "Porcentagem"; // Porcentagem | Fixo
+    public decimal Valor { get; set; } // Ex: 10 (%) ou 5.00 (R$)
+    public decimal ValorMinimoPedido { get; set; } = 0;
+    public bool Ativo { get; set; } = true;
+}
+
+public record CriarPedidoDto(
+    string? NomeCliente, 
+    string? Telefone, 
+    string? Observacao, 
+    string? MetodoPagamento, 
+    int? CartaoId, 
+    List<ItemPedidoDto> Itens,
+    string? Cep = null,
+    string? Logradouro = null,
+    string? Numero = null,
+    string? Complemento = null,
+    string? Bairro = null,
+    string? Cidade = null,
+    string? Estado = null,
+    decimal? TaxaEntrega = 0,
+    string? CupomCodigo = null
+);
 public record ItemPedidoDto(int ProdutoId, int Quantidade);
 public record AtualizarStatusDto(string Status);
 public record LoginDto(string Email, string Senha);
 public record RegisterDto(string Nome, string Email, string Senha, string? Role);
 public record CartaoCreditoDto(string Numero, string NomeTitular, string Validade);
 public record SalvarConfiguracaoDto(string Chave, string Valor);
+public record ValidarCupomDto(string Codigo, decimal Subtotal);
+public record ResultadoCupomDto(bool Valido, string Mensagem, decimal DescontoCalculado, string Codigo, string Tipo, decimal Valor);
+public record ClienteReportDto(string Nome, string Telefone, int TotalPedidos, decimal TotalGasto, DateTime UltimoPedido);
+public record CalcularFreteDto(string Cep);
+public record ResultadoFreteDto(bool Atende, string Mensagem, decimal ValorFrete, double DistanciaKm, string? Logradouro, string? Bairro, string? Cidade, string? Estado);
+
+

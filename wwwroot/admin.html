@@ -99,9 +99,13 @@
             <button class="sidebar-link" onclick="showSection('pedidos', this)" aria-label="Gerenciar Pedidos">
                 📋 Pedidos
             </button>
+            <button class="sidebar-link" onclick="showSection('clientes', this)" aria-label="Histórico de Clientes">
+                👥 Clientes
+            </button>
             <button class="sidebar-link" onclick="showSection('produtos', this)" aria-label="Gerenciar Produtos">
                 🍩 Produtos
             </button>
+
             <button class="sidebar-link" onclick="showSection('estoque', this)" aria-label="Gerenciar Estoque">
                 📦 Estoque
             </button>
@@ -179,7 +183,30 @@
             </div>
         </section>
 
+        <!-- SEÇÃO: CLIENTES -->
+        <section id="section-clientes" class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>Histórico de Clientes & Compras</h1>
+                <button class="btn btn-outline" onclick="loadClientes()">🔄 Atualizar</button>
+            </div>
+            <div id="clientesTableWrap">
+                <table aria-label="Tabela de Clientes">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Telefone</th>
+                            <th>Qtd. Pedidos</th>
+                            <th>Total Gasto</th>
+                            <th>Último Pedido</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyClientes"></tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- SEÇÃO: PRODUTOS -->
+
         <section id="section-produtos" class="admin-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h1>Catálogo de Produtos</h1>
@@ -347,10 +374,12 @@
 
         if (id === 'dashboard') loadDashboard();
         if (id === 'pedidos') loadPedidos();
+        if (id === 'clientes') loadClientes();
         if (id === 'produtos') loadProdutos();
         if (id === 'estoque') loadEstoqueSelect();
         if (id === 'configuracoes') loadConfiguracoes();
     }
+
 
     async function loadDashboard() {
         try {
@@ -476,6 +505,30 @@
         showToast('Status atualizado!');
         loadPedidos();
     }
+
+    async function loadClientes() {
+        try {
+            const clientes = await apiFetch('/api/admin/reports/clientes');
+            const tbody = document.getElementById('tbodyClientes');
+            if (!clientes || clientes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Nenhum cliente com pedidos registrados ainda.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = clientes.map(c => `
+                <tr>
+                    <td style="font-weight: 700; color: var(--color-chocolate);">${c.nome}</td>
+                    <td>${c.telefone || '-'}</td>
+                    <td><span class="status-badge status-preparo" style="font-size: 0.85rem;">${c.totalPedidos} pedido(s)</span></td>
+                    <td style="font-weight: 700; color: #2e7d32;">R$ ${c.totalGasto.toFixed(2)}</td>
+                    <td>${new Date(c.ultimoPedido).toLocaleDateString()} ${new Date(c.ultimoPedido).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error('Erro ao carregar clientes:', err);
+            showToast('Erro ao carregar lista de clientes', true);
+        }
+    }
+
 
     async function loadProdutos() {
         const produtos = await apiFetch('/api/admin/products');

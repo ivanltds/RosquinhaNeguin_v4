@@ -70,10 +70,110 @@ function logout() {
     }
 }
 
+// PWA & Mobile Navigation
+let deferredPrompt;
+
+function initPwa() {
+    // 1. Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('[PWA] Service Worker registrado com sucesso! Escopo:', reg.scope))
+                .catch(err => console.log('[PWA] Falha ao registrar Service Worker:', err));
+        });
+    }
+
+    // 2. Interceptar prompt de instalação
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        console.log('[PWA] Aplicativo instalado no dispositivo com sucesso!');
+        hideInstallButton();
+    });
+}
+
+function showInstallButton() {
+    let btn = document.getElementById('pwaInstallBtn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'pwaInstallBtn';
+        btn.className = 'pwa-install-btn';
+        btn.innerHTML = '📲 <span>Instalar App</span>';
+        btn.onclick = installPwa;
+        document.body.appendChild(btn);
+    }
+    btn.style.display = 'flex';
+}
+
+function hideInstallButton() {
+    const btn = document.getElementById('pwaInstallBtn');
+    if (btn) btn.style.display = 'none';
+}
+
+async function installPwa() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('[PWA] Escolha do usuário:', outcome);
+    deferredPrompt = null;
+    hideInstallButton();
+}
+
+// Injeta Bottom Navigation Bar automaticamente em telas mobile
+function renderMobileBottomNav() {
+    if (document.querySelector('.mobile-bottom-nav')) return;
+
+    const path = window.location.pathname;
+    const isHome = path === '/' || path === '/index.html';
+    const isCardapio = path.includes('cardapio.html');
+    const isPedido = path.includes('pedido.html');
+    const isMeusPedidos = path.includes('meus-pedidos.html');
+    const isLogin = path.includes('login.html');
+
+    const nav = document.createElement('nav');
+    nav.className = 'mobile-bottom-nav';
+    nav.innerHTML = `
+        <a href="/" class="bottom-nav-item ${isHome ? 'active' : ''}">
+            <span class="nav-icon">🏠</span>
+            <span>Início</span>
+        </a>
+        <a href="/cardapio.html" class="bottom-nav-item ${isCardapio ? 'active' : ''}">
+            <span class="nav-icon">🍩</span>
+            <span>Cardápio</span>
+        </a>
+        <a href="/pedido.html" class="bottom-nav-item ${isPedido ? 'active' : ''}">
+            <span class="nav-icon">🛒</span>
+            <span>Carrinho</span>
+            <span class="bottom-nav-badge cart-count" style="display: none;">0</span>
+        </a>
+        <a href="/meus-pedidos.html" class="bottom-nav-item ${isMeusPedidos ? 'active' : ''}">
+            <span class="nav-icon">📋</span>
+            <span>Pedidos</span>
+        </a>
+        <a href="/login.html" class="bottom-nav-item ${isLogin ? 'active' : ''}" id="bottomNavProfile">
+            <span class="nav-icon">👤</span>
+            <span>Conta</span>
+        </a>
+    `;
+    document.body.appendChild(nav);
+
+    // Atualiza contagem do carrinho na bottom bar
+    if (typeof updateCartBadge === 'function') {
+        updateCartBadge();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initHeroSlider();
     updateNavAuth();
+    initPwa();
+    renderMobileBottomNav();
 });
 
 // Alias para compatibilidade
 const obs = typeof revealObs !== 'undefined' ? revealObs : null;
+

@@ -14,19 +14,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<LogLogin> LogsLogin => Set<LogLogin>();
     public DbSet<CartaoCredito> CartoesCredito => Set<CartaoCredito>();
     public DbSet<Configuracao> Configuracoes => Set<Configuracao>();
+    public DbSet<Cupom> Cupons => Set<Cupom>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
         // Precisão decimal
         mb.Entity<Produto>().Property(p => p.Preco).HasPrecision(18, 2);
         mb.Entity<Pedido>().Property(p => p.Total).HasPrecision(18, 2);
+        mb.Entity<Pedido>().Property(p => p.Subtotal).HasPrecision(18, 2);
+        mb.Entity<Pedido>().Property(p => p.TaxaEntrega).HasPrecision(18, 2);
+        mb.Entity<Pedido>().Property(p => p.Desconto).HasPrecision(18, 2);
         mb.Entity<ItemPedido>().Property(p => p.PrecoUnitario).HasPrecision(18, 2);
         mb.Entity<MovimentacaoEstoque>().Property(m => m.Quantidade).HasPrecision(18, 2);
+        mb.Entity<Cupom>().Property(c => c.Valor).HasPrecision(18, 2);
+        mb.Entity<Cupom>().Property(c => c.ValorMinimoPedido).HasPrecision(18, 2);
 
         // Índices
         mb.Entity<Usuario>().HasIndex(u => u.Email).IsUnique();
         mb.Entity<Pedido>().HasIndex(p => p.Status);
         mb.Entity<Produto>().HasIndex(p => p.Nome);
+        mb.Entity<Cupom>().HasIndex(c => c.Codigo).IsUnique();
+
 
         // Relacionamentos
         mb.Entity<Produto>()
@@ -99,5 +107,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             new Configuracao { Id = 2, Chave = "PixBeneficiario", Valor = "Rosquinha do Neguin Ltda" },
             new Configuracao { Id = 3, Chave = "PixCidade", Valor = "Sao Paulo" }
         );
+
+        // Seed de Cupons de Desconto
+        mb.Entity<Cupom>().HasData(
+            new Cupom { Id = 1, Codigo = "NEGUIN10", Tipo = "Porcentagem", Valor = 10, ValorMinimoPedido = 0, Ativo = true },
+            new Cupom { Id = 2, Codigo = "BEMVINDO", Tipo = "Fixo", Valor = 5, ValorMinimoPedido = 20, Ativo = true },
+            new Cupom { Id = 3, Codigo = "FESTA50", Tipo = "Fixo", Valor = 15, ValorMinimoPedido = 50, Ativo = true }
+        );
     }
 }
+

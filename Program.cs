@@ -6,11 +6,17 @@ using Microsoft.AspNetCore.StaticFiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Banco de dados (SQL Server) ──────────────────────────────
+// ── Banco de dados (SQL Server / SQLite Dev) ─────────────────
 var connectionString = builder.Configuration.GetConnectionString("Default");
+bool isSqlite = connectionString != null && (connectionString.Contains(".db") || connectionString.Contains("Filename="));
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(connectionString));
+{
+    if (isSqlite)
+        opt.UseSqlite(connectionString);
+    else
+        opt.UseSqlServer(connectionString);
+});
 
 // ── Autenticação e Autorização ──────────────────────────────
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -58,69 +64,42 @@ builder.Services.AddCors(opt => opt.AddDefaultPolicy(p =>
 
 var app = builder.Build();
 
-// ── Auto-migrar banco na inicialização (com retry para Docker) ──
+// ── Auto-inicializar banco na inicialização ──────────────────
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<AppDbContext>();
 
-    // Tenta aplicar migrações até 5 vezes (SQL Server no Docker demora a subir)
-    int retries = 5;
-    while (retries > 0)
-    {
-        try {
-            db.Database.Migrate();
-
-            // Correção Manual: Adiciona a coluna UsuarioId se ela não existir
-            // Útil quando não podemos rodar 'dotnet ef migrations add' no ambiente atual
-            try {
-                db.Database.ExecuteSqlRaw(@"
-                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Pedidos]') AND name = 'UsuarioId')
-                    BEGIN
-                        ALTER TABLE [Pedidos] ADD [UsuarioId] int NULL;
-                    END
-                ");
-            } catch (Exception ex) {
-                Console.WriteLine($"[Aviso] Verificação de coluna UsuarioId: {ex.Message}");
-            }
-
-            // Garante que o usuário Admin existe e tem a senha correta (1234)
-            var admin = db.Usuarios.FirstOrDefault(u => u.Email == "admin@admin.local");
-            if (admin == null)
-            {
-                db.Usuarios.Add(new RosquinhaNeguin.Models.Usuario
-                {
-                    Nome = "Administrador",
-                    Email = "admin@admin.local",
-                    SenhaHash = BCrypt.Net.BCrypt.HashPassword("1234"),
-                    Role = "Admin"
-                });
-                db.SaveChanges();
-            }
-            else 
-            {
-                // Força atualização da senha para '1234' para facilitar o acesso do usuário
-                admin.SenhaHash = BCrypt.Net.BCrypt.HashPassword("1234");
-                db.SaveChanges();
-            }
-
-            // Diagnóstico de dados
-            var qtdProdutos = db.Produtos.Count();
-            var qtdUsuarios = db.Usuarios.Count();
-            Console.WriteLine($"[DB Status] Banco Conectado: {db.Database.GetDbConnection().Database}");
-            Console.WriteLine($"[DB Status] Produtos: {qtdProdutos}, Usuários: {qtdUsuarios}");
-
-            break; 
-        } catch (Exception) {
-            retries--;
-            if (retries == 0) throw;
-            Console.WriteLine($"Aguardando SQL Server... ({retries} tentativas restantes)");
-            Thread.Sleep(10000); // espera 10s
+    try {
+        if (db.Database.IsSqlite())
+        {
+            db.Database.EnsureCreated();
         }
+        else
+        {
+            db.Database.Migrate();
+        }
+    } catch (Exception ex) {
+        Console.WriteLine($"[Aviso DB] Falha no Migrate: {ex.Message}. Inicializando via EnsureCreated...");
+        db.Database.EnsureCreated();
     }
+
+
+    // Garante usuários, cupons e massa de testes completa automaticamente
+    DbSeeder.SeedAsync(db).GetAwaiter().GetResult();
+
+    // Diagnóstico de dados
+    var qtdProdutos = db.Produtos.Count();
+    var qtdUsuarios = db.Usuarios.Count();
+    var qtdPedidos = db.Pedidos.Count();
+    var qtdCupons = db.Cupons.Count();
+    Console.WriteLine($"[DB Status] Banco Conectado: {db.Database.GetDbConnection().Database}");
+    Console.WriteLine($"[DB Status] Produtos: {qtdProdutos}, Usuários: {qtdUsuarios}, Pedidos Teste: {qtdPedidos}, Cupons: {qtdCupons}");
 }
 
+
 // ── Swagger UI (só em desenvolvimento) ───────────────────────
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

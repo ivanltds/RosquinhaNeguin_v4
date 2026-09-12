@@ -68,6 +68,18 @@ public class PedidosController(AppDbContext db) : ControllerBase
         using var transaction = await db.Database.BeginTransactionAsync();
         try
         {
+            // Validar CEP e raio de atendimento (Origem: 06250-250, máx 10km para outros municípios)
+            decimal taxaEntregaCalculada = dto.TaxaEntrega ?? 0;
+            if (!string.IsNullOrWhiteSpace(dto.Cep))
+            {
+                var freteResult = await Helpers.FreteCalculator.CalcularFreteAsync(dto.Cep);
+                if (!freteResult.Atende)
+                {
+                    return BadRequest(new { erro = freteResult.Mensagem });
+                }
+                taxaEntregaCalculada = freteResult.ValorFrete;
+            }
+
             var pedido = new Pedido
             {
                 UsuarioId = userId,
@@ -76,9 +88,18 @@ public class PedidosController(AppDbContext db) : ControllerBase
                 Observacao = dto.Observacao?.Trim(),
                 MetodoPagamento = dto.MetodoPagamento ?? "Dinheiro",
                 CartaoId = dto.CartaoId,
+                Cep = dto.Cep?.Trim(),
+                Logradouro = dto.Logradouro?.Trim(),
+                Numero = dto.Numero?.Trim(),
+                Complemento = dto.Complemento?.Trim(),
+                Bairro = dto.Bairro?.Trim(),
+                Cidade = dto.Cidade?.Trim(),
+                Estado = dto.Estado?.Trim(),
+                TaxaEntrega = taxaEntregaCalculada,
                 CriadoEm = DateTime.UtcNow,
                 Status = "pendente"
             };
+
 
             foreach (var itemDto in dto.Itens)
             {
@@ -108,7 +129,28 @@ public class PedidosController(AppDbContext db) : ControllerBase
                 });
             }
 
-            pedido.Total = pedido.Itens.Sum(i => i.Subtotal);
+            pedido.Subtotal = pedido.Itens.Sum(i => i.Subtotal);
+
+            // Validar e aplicar Cupom de Desconto (se informado)
+            if (!string.IsNullOrWhiteSpace(dto.CupomCodigo))
+            {
+                var codigoNorm = dto.CupomCodigo.Trim().ToUpper();
+                var cupom = await db.Cupons.FirstOrDefaultAsync(c => c.Codigo.ToUpper() == codigoNorm && c.Ativo);
+                if (cupom != null && pedido.Subtotal >= cupom.ValorMinimoPedido)
+                {
+                    pedido.CupomCodigo = cupom.Codigo;
+                    if (cupom.Tipo.Equals("Porcentagem", StringComparison.OrdinalIgnoreCase))
+                    {
+                        pedido.Desconto = Math.Round(pedido.Subtotal * (cupom.Valor / 100m), 2);
+                    }
+                    else
+                    {
+                        pedido.Desconto = Math.Min(cupom.Valor, pedido.Subtotal);
+                    }
+                }
+            }
+
+            pedido.Total = Math.Max(0, pedido.Subtotal + pedido.TaxaEntrega - pedido.Desconto);
             db.Pedidos.Add(pedido);
             
             await db.SaveChangesAsync();
@@ -129,9 +171,20 @@ public class PedidosController(AppDbContext db) : ControllerBase
                     pedido.NomeCliente,
                     pedido.Telefone,
                     pedido.Observacao,
+                    pedido.Cep,
+                    pedido.Logradouro,
+                    pedido.Numero,
+                    pedido.Complemento,
+                    pedido.Bairro,
+                    pedido.Cidade,
+                    pedido.Estado,
+                    pedido.TaxaEntrega,
+                    pedido.CupomCodigo,
+                    pedido.Desconto,
+                    pedido.Subtotal,
+                    pedido.Total,
                     pedido.CriadoEm,
                     pedido.Status,
-                    pedido.Total,
                     pedido.MetodoPagamento,
                     pedido.CartaoId,
                     pedido.Itens,
@@ -147,6 +200,7 @@ public class PedidosController(AppDbContext db) : ControllerBase
             return BadRequest(new { erro = ex.Message });
         }
     }
+
 
     [HttpPost("{id:int}/simular-pagamento")]
     public async Task<IActionResult> SimularPagamento(int id)

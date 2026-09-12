@@ -1,0 +1,41 @@
+{
+  "name": "Rosquinha do Neguin",
+  "short_name": "Rosquinha",
+  "description": "A melhor doceria e churros artesanais da região",
+  "start_url": "/?source=pwa",
+  "display": "standalone",
+  "background_color": "#4A2C11",
+  "theme_color": "#4A2C11",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/img/logo-200.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/logo-circle.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cardápio",
+      "url": "/cardapio.html",
+      "description": "Ver doces e salgados"
+    },
+    {
+      "name": "Fazer Pedido",
+      "url": "/pedido.html",
+      "description": "Abrir carrinho de compras"
+    },
+    {
+      "name": "Meus Pedidos",
+      "url": "/meus-pedidos.html",
+      "description": "Acompanhar status dos pedidos"
+    }
+  ]
+}

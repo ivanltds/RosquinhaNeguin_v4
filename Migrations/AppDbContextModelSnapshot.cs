@@ -144,6 +144,70 @@ namespace RosquinhaNeguin.Migrations
                         });
                 });
 
+            modelBuilder.Entity("RosquinhaNeguin.Models.Cupom", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ValorMinimoPedido")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("Cupons");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Ativo = true,
+                            Codigo = "NEGUIN10",
+                            Tipo = "Porcentagem",
+                            Valor = 10m,
+                            ValorMinimoPedido = 0m
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Ativo = true,
+                            Codigo = "BEMVINDO",
+                            Tipo = "Fixo",
+                            Valor = 5m,
+                            ValorMinimoPedido = 20m
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Ativo = true,
+                            Codigo = "FESTA50",
+                            Tipo = "Fixo",
+                            Valor = 15m,
+                            ValorMinimoPedido = 50m
+                        });
+                });
+
             modelBuilder.Entity("RosquinhaNeguin.Models.ItemPedido", b =>
                 {
                     b.Property<int>("Id")
@@ -247,11 +311,36 @@ namespace RosquinhaNeguin.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Bairro")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("CartaoId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Cep")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Cidade")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Complemento")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CriadoEm")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CupomCodigo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Desconto")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Estado")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Logradouro")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MetodoPagamento")
                         .IsRequired()
@@ -260,12 +349,23 @@ namespace RosquinhaNeguin.Migrations
                     b.Property<string>("NomeCliente")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Numero")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Observacao")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxaEntrega")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Telefone")
                         .HasColumnType("nvarchar(max)");

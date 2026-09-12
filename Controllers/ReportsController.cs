@@ -39,4 +39,28 @@ public class ReportsController(AppDbContext db) : ControllerBase
             ultimosPedidos
         });
     }
+
+    [HttpGet("clientes")]
+    public async Task<ActionResult> GetClientesReport()
+    {
+        var pedidos = await db.Pedidos
+            .Where(p => p.Status != "cancelado")
+            .ToListAsync();
+
+        var clientes = pedidos
+            .GroupBy(p => string.IsNullOrWhiteSpace(p.NomeCliente) ? (p.Telefone ?? "Cliente Anônimo") : p.NomeCliente.Trim())
+            .Select(g => new ClienteReportDto(
+                Nome: g.Key,
+                Telefone: g.FirstOrDefault()?.Telefone ?? "-",
+                TotalPedidos: g.Count(),
+                TotalGasto: g.Sum(p => p.Total),
+                UltimoPedido: g.Max(p => p.CriadoEm)
+            ))
+            .OrderByDescending(c => c.TotalPedidos)
+            .ThenByDescending(c => c.TotalGasto)
+            .ToList();
+
+        return Ok(clientes);
+    }
 }
+
