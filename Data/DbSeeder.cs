@@ -59,6 +59,30 @@ public static class DbSeeder
         }
         await db.SaveChangesAsync();
 
+        // 3. Garantir Configurações Padrão da Loja
+        var configsPadrao = new Dictionary<string, string>
+        {
+            { "PixKey", "11999999999" },
+            { "PixBeneficiario", "Rosquinha do Neguin Ltda" },
+            { "PixCidade", "Osasco" },
+            { "LojaCep", "06250250" },
+            { "LojaLogradouro", "Rua Professor Sud Menucci" },
+            { "LojaNumero", "123" },
+            { "LojaBairro", "Jardim Elvira" },
+            { "LojaCidade", "Osasco" },
+            { "LojaUf", "SP" },
+            { "TempoPreparoMinutos", "45" }
+        };
+
+        foreach (var (chave, valor) in configsPadrao)
+        {
+            if (!await db.Configuracoes.AnyAsync(c => c.Chave == chave))
+            {
+                db.Configuracoes.Add(new Configuracao { Chave = chave, Valor = valor });
+            }
+        }
+        await db.SaveChangesAsync();
+
         // 3. Garantir Massa de Testes de Pedidos Reais (se houver menos de 3 pedidos)
         if (await db.Pedidos.CountAsync() < 3)
         {

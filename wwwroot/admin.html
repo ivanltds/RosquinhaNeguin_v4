@@ -245,6 +245,17 @@
         .status-entregue { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
         .status-cancelado { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
         .status-confirmado { background: #efebe9; color: #4e342e; border: 1px solid #d7ccc8; }
+        .status-atrasado {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ff8a80;
+            font-weight: 800;
+            animation: pulseAtrasado 1.8s infinite ease-in-out;
+        }
+        @keyframes pulseAtrasado {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(0.97); }
+        }
 
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
 
@@ -428,8 +439,8 @@
                 <button class="sidebar-link" onclick="showSection('estoque', this)" aria-label="Gerenciar Estoque">
                     <span>📦</span> <span>Estoque</span>
                 </button>
-                <button class="sidebar-link" onclick="showSection('configuracoes', this)" aria-label="Configurações Pix">
-                    <span>⚙️</span> <span>Configurações Pix</span>
+                <button class="sidebar-link" onclick="showSection('configuracoes', this)" aria-label="Configurações da Loja">
+                    <span>⚙️</span> <span>Configurações da Loja</span>
                 </button>
             </div>
         </div>
@@ -587,30 +598,88 @@
             </div>
         </section>
 
-        <!-- SEÇÃO: CONFIGURAÇÕES PIX -->
+        <!-- SEÇÃO: CONFIGURAÇÕES DA LOJA -->
         <section id="section-configuracoes" class="admin-section">
-            <h1 style="margin-bottom: 20px;">Configurações Pix</h1>
-            <div class="form-card" style="max-width: 500px;">
-                <h3>Dados de Recebimento Pix</h3>
-                <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-bottom: 20px;">
-                    Configure aqui as credenciais da conta Pix da loja.
-                </p>
-                <form id="formConfiguracoes" onsubmit="salvarConfiguracoes(event)">
-                    <div class="form-group">
-                        <label for="confPixKey">Chave Pix</label>
-                        <input type="text" id="confPixKey" class="form-control" placeholder="E-mail, CPF, CNPJ, Celular ou Aleatória" required>
+            <h1 style="margin-bottom: 20px;">Configurações Gerais da Loja</h1>
+            <p style="font-size: 0.9rem; color: var(--color-text-sub); margin-bottom: 25px;">
+                Gerencie a chave Pix, endereço de origem para frete e o tempo de preparo estimado dos pedidos.
+            </p>
+            
+            <form id="formConfiguracoes" onsubmit="salvarConfiguracoes(event)">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    
+                    <!-- Bloco PIX -->
+                    <div class="form-card">
+                        <h3 style="margin-bottom: 15px; color: var(--color-chocolate);">💳 Recebimento Pix</h3>
+                        <div class="form-group">
+                            <label for="confPixKey">Chave Pix</label>
+                            <input type="text" id="confPixKey" class="form-control" placeholder="E-mail, CPF, CNPJ, Celular ou Aleatória" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confPixBeneficiario">Nome do Beneficiário</label>
+                            <input type="text" id="confPixBeneficiario" class="form-control" maxlength="25" placeholder="Nome titular da conta Pix" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confPixCidade">Cidade do Beneficiário</label>
+                            <input type="text" id="confPixCidade" class="form-control" maxlength="15" placeholder="Cidade cadastrada no banco" required>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="confPixBeneficiario">Nome do Beneficiário</label>
-                        <input type="text" id="confPixBeneficiario" class="form-control" maxlength="25" placeholder="Nome titular da conta Pix" required>
+
+                    <!-- Bloco Tempo de Preparo -->
+                    <div class="form-card">
+                        <h3 style="margin-bottom: 15px; color: var(--color-chocolate);">⏱️ Tempo de Preparo do Pedido</h3>
+                        <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-bottom: 15px;">
+                            Tempo exibido ao cliente no checkout e usado como limite para alertar <strong>pedidos atrasados</strong>.
+                        </p>
+                        <div class="form-group">
+                            <label for="confTempoPreparoMinutos">Tempo Estimado (minutos)</label>
+                            <input type="number" id="confTempoPreparoMinutos" class="form-control" min="5" max="300" step="5" value="45" required>
+                            <small style="color: var(--color-text-sub); display: block; margin-top: 5px;">
+                                Ex: 45 minutos. Pedidos que ultrapassarem este tempo aparecerão com o status <strong>⚠️ Atrasado</strong>.
+                            </small>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="confPixCidade">Cidade do Beneficiário</label>
-                        <input type="text" id="confPixCidade" class="form-control" maxlength="15" placeholder="Cidade cadastrada no banco" required>
+
+                    <!-- Bloco Endereço da Loja -->
+                    <div class="form-card" style="grid-column: 1 / -1;">
+                        <h3 style="margin-bottom: 15px; color: var(--color-chocolate);">📍 Endereço de Origem da Loja (Cálculo de Frete)</h3>
+                        <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-bottom: 15px;">
+                            Utilizado como ponto de partida das entregas para calcular a distância e o valor do frete.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label for="confLojaCep">CEP de Origem</label>
+                                <input type="text" id="confLojaCep" class="form-control" maxlength="9" placeholder="06250-250" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confLojaLogradouro">Logradouro / Rua</label>
+                                <input type="text" id="confLojaLogradouro" class="form-control" placeholder="Rua / Avenida" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confLojaNumero">Número</label>
+                                <input type="text" id="confLojaNumero" class="form-control" placeholder="100" required>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label for="confLojaBairro">Bairro</label>
+                                <input type="text" id="confLojaBairro" class="form-control" placeholder="Bairro" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confLojaCidade">Cidade</label>
+                                <input type="text" id="confLojaCidade" class="form-control" placeholder="Osasco" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confLojaUf">UF</label>
+                                <input type="text" id="confLojaUf" class="form-control" maxlength="2" placeholder="SP" required>
+                            </div>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 10px;">Salvar Configurações</button>
-                </form>
-            </div>
+
+                </div>
+                
+                <button type="submit" class="btn btn-gold" style="font-size: 1rem; padding: 12px 30px;">💾 Salvar Todas as Configurações</button>
+            </form>
         </section>
     </main>
 </div>
@@ -726,15 +795,25 @@
             // Lista últimos pedidos
             const list = document.getElementById('recentOrdersList');
             if (data.ultimosPedidos && data.ultimosPedidos.length > 0) {
-                list.innerHTML = data.ultimosPedidos.map(p => `
+                const prepMin = storeTempoPreparoMinutos || 45;
+                list.innerHTML = data.ultimosPedidos.map(p => {
+                    const elapsedMin = Math.floor((new Date() - new Date(p.criadoEm)) / 60000);
+                    const isDelayed = (p.status !== 'entregue' && p.status !== 'cancelado') && (elapsedMin > prepMin);
+                    const delayBadge = isDelayed ? `<span class="status-badge status-atrasado" style="margin-left: 4px; font-size: 0.7rem;">⚠️ +${elapsedMin - prepMin}m</span>` : '';
+                    
+                    return `
                     <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <span style="font-weight: 600;">#${p.id}</span>
                             <br><small style="color: var(--color-text-sub);">${p.nomeCliente || 'Cliente'}</small>
                         </div>
-                        <span class="status-badge status-${p.status}">${p.status}</span>
+                        <div>
+                            <span class="status-badge status-${p.status}">${p.status}</span>
+                            ${delayBadge}
+                        </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             } else {
                 list.innerHTML = '<p style="padding: 20px; text-align: center; color: var(--color-text-sub);">Nenhum pedido recente.</p>';
             }
@@ -803,24 +882,37 @@
         const status = document.getElementById('filterStatus').value;
         const pedidos = await apiFetch(`/api/pedidos${status ? '?status='+status : ''}`);
         const tbody = document.getElementById('tbodyPedidos');
+        const prepMin = storeTempoPreparoMinutos || 45;
         
-        tbody.innerHTML = pedidos.map(p => `
-            <tr>
-                <td>#${p.id}</td>
+        tbody.innerHTML = pedidos.map(p => {
+            const elapsedMin = Math.floor((new Date() - new Date(p.criadoEm)) / 60000);
+            const isDelayed = (p.status !== 'entregue' && p.status !== 'cancelado') && (elapsedMin > prepMin);
+            const delayHtml = isDelayed 
+                ? `<div style="margin-top: 4px;"><span class="status-badge status-atrasado" title="Tempo excedido em ${elapsedMin - prepMin} min">⚠️ Atrasado (+${elapsedMin - prepMin} min)</span></div>`
+                : '';
+
+            return `
+            <tr class="${isDelayed ? 'table-warning-row' : ''}">
+                <td style="font-weight: 700;">#${p.id}</td>
                 <td>${p.nomeCliente || '-'}</td>
-                <td>${new Date(p.criadoEm).toLocaleDateString()}</td>
-                <td>R$ ${p.total.toFixed(2)}</td>
-                <td><span class="status-badge status-${p.status}">${p.status}</span></td>
+                <td>${new Date(p.criadoEm).toLocaleDateString()} ${new Date(p.criadoEm).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+                <td style="font-weight: 700; color: #2e7d32;">R$ ${p.total.toFixed(2)}</td>
+                <td>
+                    <span class="status-badge status-${p.status}">${p.status}</span>
+                    ${delayHtml}
+                </td>
                 <td>
                     <select onchange="updateStatus(${p.id}, this.value)" class="form-control btn-sm">
                         <option value="pendente" ${p.status=='pendente'?'selected':''}>Pendente</option>
+                        <option value="confirmado" ${p.status=='confirmado'?'selected':''}>Confirmado</option>
                         <option value="preparo" ${p.status=='preparo'?'selected':''}>Preparo</option>
                         <option value="entregue" ${p.status=='entregue'?'selected':''}>Entregue</option>
                         <option value="cancelado" ${p.status=='cancelado'?'selected':''}>Cancelado</option>
                     </select>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
     async function updateStatus(id, newStatus) {
@@ -947,17 +1039,27 @@
         loadEstoqueSelect();
     }
 
+    let storeTempoPreparoMinutos = 45;
+
     async function loadConfiguracoes() {
         try {
             const configs = await apiFetch('/api/config/admin');
             
-            const pixKey = configs.find(c => c.chave === 'PixKey')?.valor || '';
-            const pixBeneficiario = configs.find(c => c.chave === 'PixBeneficiario')?.valor || '';
-            const pixCidade = configs.find(c => c.chave === 'PixCidade')?.valor || '';
+            const getVal = (key, defaultVal = '') => configs.find(c => c.chave === key)?.valor || defaultVal;
+
+            document.getElementById('confPixKey').value = getVal('PixKey');
+            document.getElementById('confPixBeneficiario').value = getVal('PixBeneficiario');
+            document.getElementById('confPixCidade').value = getVal('PixCidade');
             
-            document.getElementById('confPixKey').value = pixKey;
-            document.getElementById('confPixBeneficiario').value = pixBeneficiario;
-            document.getElementById('confPixCidade').value = pixCidade;
+            document.getElementById('confTempoPreparoMinutos').value = getVal('TempoPreparoMinutos', '45');
+            storeTempoPreparoMinutos = parseInt(getVal('TempoPreparoMinutos', '45')) || 45;
+
+            document.getElementById('confLojaCep').value = getVal('LojaCep', '06250-250');
+            document.getElementById('confLojaLogradouro').value = getVal('LojaLogradouro', 'Rua São Paulo');
+            document.getElementById('confLojaNumero').value = getVal('LojaNumero', '100');
+            document.getElementById('confLojaBairro').value = getVal('LojaBairro', 'Helena Maria');
+            document.getElementById('confLojaCidade').value = getVal('LojaCidade', 'Osasco');
+            document.getElementById('confLojaUf').value = getVal('LojaUf', 'SP');
         } catch (err) {
             console.error('Erro ao carregar configurações:', err);
             showToast('Erro ao carregar configurações', true);
@@ -968,9 +1070,16 @@
         e.preventDefault();
         try {
             const data = [
-                { chave: 'PixKey', valor: document.getElementById('confPixKey').value },
-                { chave: 'PixBeneficiario', valor: document.getElementById('confPixBeneficiario').value },
-                { chave: 'PixCidade', valor: document.getElementById('confPixCidade').value }
+                { chave: 'PixKey', valor: document.getElementById('confPixKey').value.trim() },
+                { chave: 'PixBeneficiario', valor: document.getElementById('confPixBeneficiario').value.trim() },
+                { chave: 'PixCidade', valor: document.getElementById('confPixCidade').value.trim() },
+                { chave: 'TempoPreparoMinutos', valor: document.getElementById('confTempoPreparoMinutos').value.trim() },
+                { chave: 'LojaCep', valor: document.getElementById('confLojaCep').value.trim() },
+                { chave: 'LojaLogradouro', valor: document.getElementById('confLojaLogradouro').value.trim() },
+                { chave: 'LojaNumero', valor: document.getElementById('confLojaNumero').value.trim() },
+                { chave: 'LojaBairro', valor: document.getElementById('confLojaBairro').value.trim() },
+                { chave: 'LojaCidade', valor: document.getElementById('confLojaCidade').value.trim() },
+                { chave: 'LojaUf', valor: document.getElementById('confLojaUf').value.trim() }
             ];
 
             await apiFetch('/api/config/admin', {
@@ -978,12 +1087,23 @@
                 body: JSON.stringify(data)
             });
 
+            storeTempoPreparoMinutos = parseInt(document.getElementById('confTempoPreparoMinutos').value) || 45;
             showToast('Configurações salvas com sucesso!');
         } catch (err) {
             console.error('Erro ao salvar configurações:', err);
             showToast('Erro ao salvar configurações', true);
         }
     }
+
+    // Pré-carrega o tempo de preparo para os badges de atraso
+    (async function initStoreConfig() {
+        try {
+            const pubConfig = await apiFetch('/api/config/public');
+            if (pubConfig && pubConfig.tempoPreparoMinutos) {
+                storeTempoPreparoMinutos = pubConfig.tempoPreparoMinutos;
+            }
+        } catch (e) {}
+    })();
 
     function logout() {
         localStorage.removeItem('user');
