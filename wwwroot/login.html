@@ -150,18 +150,23 @@
             });
             localStorage.setItem('user', JSON.stringify(user));
             
-            // Redireciona baseado na Role
+            const redirect = new URLSearchParams(window.location.search).get('redirect');
             if (user.role === 'Admin') {
-                window.location.href = '/admin.html';
+                window.location.href = redirect || '/admin.html';
             } else {
-                // Retorna para o pedido se veio de lá
-                const redirect = new URLSearchParams(window.location.search).get('redirect');
                 window.location.href = redirect || '/';
             }
         } catch (err) {
             alert('Erro no Login: ' + err.message);
         }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('msg') === 'expired') {
+            showToast('⚠️ Sua sessão expirou. Por favor, entre novamente.', 'warning');
+        }
+    });
 
     async function handleRegister(e) {
         e.preventDefault();

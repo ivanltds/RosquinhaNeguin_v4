@@ -879,40 +879,46 @@
     }
 
     async function loadPedidos() {
-        const status = document.getElementById('filterStatus').value;
-        const pedidos = await apiFetch(`/api/pedidos${status ? '?status='+status : ''}`);
-        const tbody = document.getElementById('tbodyPedidos');
-        const prepMin = storeTempoPreparoMinutos || 45;
-        
-        tbody.innerHTML = pedidos.map(p => {
-            const elapsedMin = Math.floor((new Date() - new Date(p.criadoEm)) / 60000);
-            const isDelayed = (p.status !== 'entregue' && p.status !== 'cancelado') && (elapsedMin > prepMin);
-            const delayHtml = isDelayed 
-                ? `<div style="margin-top: 4px;"><span class="status-badge status-atrasado" title="Tempo excedido em ${elapsedMin - prepMin} min">⚠️ Atrasado (+${elapsedMin - prepMin} min)</span></div>`
-                : '';
+        try {
+            const status = document.getElementById('filterStatus').value;
+            const pedidos = await apiFetch(`/api/pedidos${status ? '?status='+status : ''}`);
+            const tbody = document.getElementById('tbodyPedidos');
+            if (!pedidos) return;
+            const prepMin = storeTempoPreparoMinutos || 45;
+            
+            tbody.innerHTML = pedidos.map(p => {
+                const elapsedMin = Math.floor((new Date() - new Date(p.criadoEm)) / 60000);
+                const isDelayed = (p.status !== 'entregue' && p.status !== 'cancelado') && (elapsedMin > prepMin);
+                const delayHtml = isDelayed 
+                    ? `<div style="margin-top: 4px;"><span class="status-badge status-atrasado" title="Tempo excedido em ${elapsedMin - prepMin} min">⚠️ Atrasado (+${elapsedMin - prepMin} min)</span></div>`
+                    : '';
 
-            return `
-            <tr class="${isDelayed ? 'table-warning-row' : ''}">
-                <td style="font-weight: 700;">#${p.id}</td>
-                <td>${p.nomeCliente || '-'}</td>
-                <td>${new Date(p.criadoEm).toLocaleDateString()} ${new Date(p.criadoEm).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-                <td style="font-weight: 700; color: #2e7d32;">R$ ${p.total.toFixed(2)}</td>
-                <td>
-                    <span class="status-badge status-${p.status}">${p.status}</span>
-                    ${delayHtml}
-                </td>
-                <td>
-                    <select onchange="updateStatus(${p.id}, this.value)" class="form-control btn-sm">
-                        <option value="pendente" ${p.status=='pendente'?'selected':''}>Pendente</option>
-                        <option value="confirmado" ${p.status=='confirmado'?'selected':''}>Confirmado</option>
-                        <option value="preparo" ${p.status=='preparo'?'selected':''}>Preparo</option>
-                        <option value="entregue" ${p.status=='entregue'?'selected':''}>Entregue</option>
-                        <option value="cancelado" ${p.status=='cancelado'?'selected':''}>Cancelado</option>
-                    </select>
-                </td>
-            </tr>
-            `;
-        }).join('');
+                return `
+                <tr class="${isDelayed ? 'table-warning-row' : ''}">
+                    <td style="font-weight: 700;">#${p.id}</td>
+                    <td>${p.nomeCliente || '-'}</td>
+                    <td>${new Date(p.criadoEm).toLocaleDateString()} ${new Date(p.criadoEm).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+                    <td style="font-weight: 700; color: #2e7d32;">R$ ${p.total.toFixed(2)}</td>
+                    <td>
+                        <span class="status-badge status-${p.status}">${p.status}</span>
+                        ${delayHtml}
+                    </td>
+                    <td>
+                        <select onchange="updateStatus(${p.id}, this.value)" class="form-control btn-sm">
+                            <option value="pendente" ${p.status=='pendente'?'selected':''}>Pendente</option>
+                            <option value="confirmado" ${p.status=='confirmado'?'selected':''}>Confirmado</option>
+                            <option value="preparo" ${p.status=='preparo'?'selected':''}>Preparo</option>
+                            <option value="entregue" ${p.status=='entregue'?'selected':''}>Entregue</option>
+                            <option value="cancelado" ${p.status=='cancelado'?'selected':''}>Cancelado</option>
+                        </select>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error('Erro ao carregar pedidos:', err);
+            showToast('Erro ao carregar pedidos', true);
+        }
     }
 
     async function updateStatus(id, newStatus) {

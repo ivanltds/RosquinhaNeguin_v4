@@ -118,15 +118,25 @@ async function apiFetch(path, opts = {}) {
     });
     
     if (!res.ok) {
+      if (res.status === 401) {
+        // Se a sessão expirou em páginas administrativas
+        if (window.location.pathname.includes('admin.html')) {
+          localStorage.removeItem('user');
+          window.location.href = '/login.html?redirect=/admin.html&msg=expired';
+          return null;
+        }
+      }
       const errData = await res.json().catch(() => ({ erro: `Erro HTTP ${res.status}` }));
       const msg = errData.erro || errData.message || `Falha na requisição (${res.status})`;
-      console.error(`[API Error ${res.status}] ${path}:`, msg);
+      console.warn(`[API ${res.status}] ${path}:`, msg);
       throw new Error(msg);
     }
     
     return res.status === 204 ? null : res.json();
   } catch (err) {
-    console.error(`[apiFetch Connection Error] ${path}:`, err);
+    if (!err.message?.includes('401')) {
+      console.error(`[apiFetch Connection Error] ${path}:`, err);
+    }
     throw err;
   }
 }
